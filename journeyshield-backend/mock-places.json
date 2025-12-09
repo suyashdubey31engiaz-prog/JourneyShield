@@ -1,0 +1,44 @@
+[
+  {
+    "fsq_id": "5a2135c33e583730722026e6",
+    "name": "Alfred Park",
+    "geocodes": {
+      "main": {
+        "latitude": 25.4542,
+        "longitude": 81.832
+      }
+    },
+    "location": {
+      "address": "Prayagraj, Uttar Pradesh",
+      "country": "IN"
+    }
+  },
+  {
+    "fsq_id": "4e18228f483b426742a2221b",
+    "name": "Anand Bhawan",
+    "geocodes": {
+      "main": {
+        "latitude": 25.4616,
+        "longitude": 81.8512
+      }
+    },
+    "location": {
+      "address": "Tagore Town, Prayagraj, Uttar Pradesh",
+      "country": "IN"
+    }
+  },
+  {
+    "fsq_id": "4d1d9a5b7d8bf04d2e7b573c",
+    "name": "Triveni Sangam",
+    "geocodes": {
+      "main": {
+        "latitude": 25.4419,
+        "longitude": 81.8871
+      }
+    },
+    "location": {
+      "address": "Near Allahabad Fort, Prayagraj, Uttar Pradesh",
+      "country": "IN"
+    }
+  }
+]
