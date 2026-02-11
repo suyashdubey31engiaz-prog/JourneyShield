@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import logo from '../../assets/logo.svg';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -20,9 +21,18 @@ const Navbar = () => {
   return (
     <header className="bg-gray-900/90 backdrop-blur-md text-white sticky top-0 z-50 border-b border-gray-800">
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-500">
-          Journey Shield
-        </h1>
+
+        
+        <NavLink to="/" className="flex items-center gap-3">
+          <img 
+            src={logo} 
+            alt="Journey Shield Logo" 
+            className="w-10 h-10 object-contain" // Adjust size (w-10 = 40px)
+          />
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-500">
+            Journey Shield
+          </h1>
+        </NavLink>
         
         <div className="flex items-center space-x-4">
           {user ? (
