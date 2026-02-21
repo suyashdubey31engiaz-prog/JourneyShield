@@ -1,16 +1,20 @@
 import express from 'express';
-import { createBooking, getMyBookings, updateBookingStatus } from '../controllers/bookingController.js';
+import { 
+  createBooking, 
+  getMyBookings, 
+  getGuideBookings, 
+  updateBookingStatus 
+} from '../controllers/bookingController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/')
-  .post(protect, createBooking);
+// Specific routes MUST come before /:id routes
+router.get('/mybookings', protect, getMyBookings);
+router.get('/guidebookings', protect, getGuideBookings);
 
-router.route('/my-bookings')
-  .get(protect, getMyBookings);
-
-router.route('/:id')
-  .put(protect, updateBookingStatus);
+// Standard / Dynamic routes
+router.post('/', protect, createBooking);
+router.put('/:id/status', protect, updateBookingStatus);
 
 export default router;

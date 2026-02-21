@@ -1,37 +1,32 @@
 import axios from 'axios';
 
+const API_URL = 'http://localhost:5000/api/bookings/'; // Ensure this matches your backend port
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/bookings/';
-
-// Helper to get auth header
-const getAuthConfig = () => {
-  const user = JSON.parse(sessionStorage.getItem('user'));
-  if (!user || !user.token) return null;
-  return { headers: { Authorization: `Bearer ${user.token}` } };
+// 1. Create a new private booking (or group booking)
+export const createBooking = async (bookingData, token) => {
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  // bookingData contains: guideId, date, isPrivateGroup, groupMembers
+  const response = await axios.post(API_URL, bookingData, config);
+  return response.data;
 };
 
-const createBooking = (bookingData) => {
-  const config = getAuthConfig();
-  if (!config) return Promise.reject("Not authorized");
-  return axios.post(API_URL, bookingData, config);
+// 2. Fetch all bookings made by the traveler
+export const getMyBookings = async (token) => {
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axios.get(`${API_URL}mybookings`, config);
+  return response.data;
 };
 
-const getMyBookings = () => {
-  const config = getAuthConfig();
-  if (!config) return Promise.reject("Not authorized");
-  return axios.get(API_URL + 'my-bookings', config);
+// 3. Fetch all requests sent to the guide
+export const getGuideBookings = async (token) => {
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axios.get(`${API_URL}guidebookings`, config);
+  return response.data;
 };
 
-const updateStatus = (id, status) => {
-  const config = getAuthConfig();
-  if (!config) return Promise.reject("Not authorized");
-  return axios.put(API_URL + id, { status }, config);
+// 4. Update the status of a booking (Guide accepts/rejects)
+export const updateBookingStatus = async (bookingId, status, token) => {
+  const config = { headers: { Authorization: `Bearer ${token}` } };
+  const response = await axios.put(`${API_URL}${bookingId}/status`, { status }, config);
+  return response.data;
 };
-
-const bookingService = {
-  createBooking,
-  getMyBookings,
-  updateStatus
-};
-
-export default bookingService;

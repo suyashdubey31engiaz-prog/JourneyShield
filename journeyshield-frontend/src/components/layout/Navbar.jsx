@@ -7,7 +7,6 @@ const Navbar = () => {
   const location = useLocation();
   const [user, setUser] = React.useState(null);
 
-  // Check for user whenever the route changes
   React.useEffect(() => {
     setUser(JSON.parse(sessionStorage.getItem('user')));
   }, [location]);
@@ -21,23 +20,25 @@ const Navbar = () => {
   return (
     <header className="bg-gray-900/90 backdrop-blur-md text-white sticky top-0 z-50 border-b border-gray-800">
       <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-
         
         <NavLink to="/" className="flex items-center gap-3">
-          <img 
-            src={logo} 
-            alt="Journey Shield Logo" 
-            className="w-10 h-10 object-contain" // Adjust size (w-10 = 40px)
-          />
+          <img src={logo} alt="Journey Shield Logo" className="w-10 h-10 object-contain" />
           <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-500">
             Journey Shield
           </h1>
         </NavLink>
         
         <div className="flex items-center space-x-4">
+          {/* Always show Group Tours to everyone */}
+          <NavLink 
+            to="/group-tours" 
+            className={({ isActive }) => `px-4 py-2 text-sm font-semibold rounded-md transition-colors ${isActive ? 'bg-gray-800 text-yellow-400' : 'hover:bg-gray-800/50'}`}
+          >
+            Group Tours
+          </NavLink>
+
           {user ? (
             <>
-              {/* Common Links for all logged-in users */}
               <NavLink 
                 to={user.role === 'Guide' ? "/guide-dashboard" : "/dashboard"} 
                 className={({ isActive }) => `px-4 py-2 text-sm font-semibold rounded-md transition-colors ${isActive ? 'bg-gray-800 text-yellow-400' : 'hover:bg-gray-800/50'}`}

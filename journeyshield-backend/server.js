@@ -10,6 +10,7 @@ import routeRoutes from './routes/routeRoutes.js'; // 1. Import new route
 import incidentRoutes from './routes/incidentRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import tourRoutes from './routes/tourRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -26,6 +27,7 @@ app.use('/api/route', routeRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/tours', tourRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

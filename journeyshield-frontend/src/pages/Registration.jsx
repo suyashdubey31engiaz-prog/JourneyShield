@@ -1,65 +1,105 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import authService from '../services/authService';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Registration = () => {
-  const [formData, setFormData] = useState({ name: '', username: '', email: '', password: '' });
-  const [role, setRole] = useState('Traveler');
+  const [role, setRole] = useState('Traveler'); // Defaults to 'Traveler'
+  const [formData, setFormData] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
+
     try {
-      await authService.register({ ...formData, role });
-      navigate('/login');
+      const { data } = await axios.post('http://localhost:5000/api/users/register', { 
+        ...formData, 
+        role 
+      });
+      
+      // Save user to session storage
+      sessionStorage.setItem('user', JSON.stringify(data));
+      
+      // Redirect based on role
+      if (data.role === 'Guide') {
+        navigate('/guide-dashboard');
+      } else {
+        navigate('/dashboard'); // Or wherever your traveler lands
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center py-8 px-4">
-      <div className="w-full max-w-md bg-gray-800/40 backdrop-blur-md p-8 rounded-2xl border border-gray-700">
-        <h2 className="text-2xl font-bold text-center mb-2 text-yellow-400">Register</h2>
-        <div className="flex justify-center mb-4">
-          <div className="flex bg-gray-900/50 p-1 rounded-lg">
-            <button onClick={() => setRole('Traveler')} className={`px-4 py-1 text-sm font-semibold rounded-md transition-colors ${role === 'Traveler' ? 'bg-gray-700' : 'text-gray-400'}`}>User</button>
-            <button onClick={() => setRole('Guide')} className={`px-4 py-1 text-sm font-semibold rounded-md transition-colors ${role === 'Guide' ? 'bg-gray-700' : 'text-gray-400'}`}>Guide</button>
-          </div>
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="bg-gray-800 p-8 rounded-lg border border-gray-700 w-full max-w-md shadow-2xl">
+        <h2 className="text-3xl font-bold text-yellow-500 text-center mb-6">Register</h2>
+        
+        {/* Role Toggle */}
+        <div className="flex justify-center space-x-4 mb-6">
+          <button 
+            type="button"
+            onClick={() => setRole('Traveler')}
+            className={`px-4 py-2 rounded-md font-bold transition-colors ${role === 'Traveler' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
+          >
+            User
+          </button>
+          <button 
+            type="button"
+            onClick={() => setRole('Guide')}
+            className={`px-4 py-2 rounded-md font-bold transition-colors ${role === 'Guide' ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
+          >
+            Guide
+          </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {error && <p className="text-center bg-red-500/30 text-red-400 p-2 rounded-md text-sm">{error}</p>}
+
+        {error && (
+          <div className="bg-red-900/50 text-red-400 p-3 rounded text-center mb-4 text-sm font-semibold">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="text-xs text-gray-400">Full Name</label>
-            <input name="name" type="text" required onChange={handleChange} className="mt-1 block w-full bg-gray-900/50 border border-gray-600 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500" />
+            <label className="block text-sm text-gray-400 mb-1">Full Name</label>
+            <input type="text" name="fullName" required value={formData.fullName} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded-md px-4 py-2 text-white outline-none focus:border-yellow-500" />
           </div>
           <div>
-            <label className="text-xs text-gray-400">Username</label>
-            <input name="username" type="text" required onChange={handleChange} className="mt-1 block w-full bg-gray-900/50 border border-gray-600 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500" />
+            <label className="block text-sm text-gray-400 mb-1">Username</label>
+            <input type="text" name="username" required value={formData.username} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded-md px-4 py-2 text-white outline-none focus:border-yellow-500" />
           </div>
           <div>
-            <label className="text-xs text-gray-400">Email</label>
-            <input name="email" type="email" required onChange={handleChange} className="mt-1 block w-full bg-gray-900/50 border border-gray-600 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500" />
+            <label className="block text-sm text-gray-400 mb-1">Email</label>
+            <input type="email" name="email" required value={formData.email} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded-md px-4 py-2 text-white outline-none focus:border-yellow-500" />
           </div>
           <div>
-            <label className="text-xs text-gray-400">Password</label>
-            <input name="password" type="password" required onChange={handleChange} className="mt-1 block w-full bg-gray-900/50 border border-gray-600 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-yellow-500" />
+            <label className="block text-sm text-gray-400 mb-1">Password</label>
+            <input type="password" name="password" required value={formData.password} onChange={handleChange} className="w-full bg-gray-900 border border-gray-700 rounded-md px-4 py-2 text-white outline-none focus:border-yellow-500" />
           </div>
-          <button type="submit" disabled={loading} className="w-full pt-2 pb-2 bg-gray-700 text-white font-semibold py-2 rounded-md hover:bg-yellow-500 hover:text-black transition-colors disabled:opacity-50">
+          
+          <button type="submit" disabled={loading} className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-md transition-colors mt-2">
             {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
+        
+        <p className="text-gray-400 text-center text-sm mt-4">
+          Already have an account? <Link to="/login" className="text-yellow-500 hover:underline">Login</Link>
+        </p>
       </div>
     </div>
   );

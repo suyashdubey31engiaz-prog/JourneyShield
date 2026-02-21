@@ -1,96 +1,90 @@
 import Booking from '../models/bookingModel.js';
-import Guide from '../models/guideModel.js';
 
-// @desc    Create a new booking request
+// @desc    Create a new booking (Traveler hiring a Guide)
 // @route   POST /api/bookings
-// @access  Private (Traveler)
-const createBooking = async (req, res) => {
-  const { guideId, date, notes } = req.body;
-
-  if (!guideId || !date) {
-    return res.status(400).json({ message: 'Guide and Date are required' });
-  }
-
+export const createBooking = async (req, res) => {
   try {
-    // Ensure the guide exists
-    const guideExists = await Guide.findById(guideId);
-    if (!guideExists) {
-      return res.status(404).json({ message: 'Guide not found' });
+    const { guideId, date, isPrivateGroup, groupMembers } = req.body;
+
+    // Basic validation
+    if (!guideId || !date) {
+      return res.status(400).json({ message: 'Guide and Date are required.' });
+    }
+
+    // Ensure the traveler isn't trying to book themselves
+    if (guideId === req.user._id.toString()) {
+      return res.status(400).json({ message: 'You cannot book yourself.' });
     }
 
     const booking = await Booking.create({
-      traveler: req.user._id,
+      traveler: req.user._id, 
       guide: guideId,
-      date,
-      notes
+      date: date,
+      isPrivateGroup: isPrivateGroup || false,
+      groupMembers: isPrivateGroup ? groupMembers : [], 
     });
 
     res.status(201).json(booking);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Error creating booking', error: error.message });
   }
 };
 
-// @desc    Get bookings for the logged-in user
-// @route   GET /api/bookings/my-bookings
-// @access  Private
-const getMyBookings = async (req, res) => {
+// @desc    Get all bookings made by the logged-in Traveler
+// @route   GET /api/bookings/mybookings
+export const getMyBookings = async (req, res) => {
   try {
-    let bookings;
+    const bookings = await Booking.find({ traveler: req.user._id })
+      // THIS is the line that fixes "Guide: Unknown"
+      .populate('guide', 'name email') 
+      .sort({ createdAt: -1 });
 
-    // If user is a Guide, find bookings where they are the guide
-    // We need to find the Guide profile associated with this User first
-    if (req.user.role === 'Guide') {
-      const guideProfile = await Guide.findOne({ user: req.user._id });
-      if (!guideProfile) {
-        return res.json([]); // No profile, no bookings
-      }
-      bookings = await Booking.find({ guide: guideProfile._id })
-        .populate('traveler', 'name email')
-        .sort({ date: 1 }); // Sort by date ascending
-    } 
-    // If user is a Traveler, find bookings they created
-    else {
-      bookings = await Booking.find({ traveler: req.user._id })
-        .populate({
-          path: 'guide',
-          populate: { path: 'user', select: 'name email' } // Deep populate to get Guide's name
-        })
-        .sort({ date: 1 });
+    res.status(200).json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching your bookings', error: error.message });
+  }
+};
+
+// @desc    Get all booking requests received by the logged-in Guide
+// @route   GET /api/bookings/guidebookings
+export const getGuideBookings = async (req, res) => {
+  try {
+    if (req.user.role !== 'Guide') {
+      return res.status(403).json({ message: 'Access denied. Only guides can view these bookings.' });
     }
 
-    res.json(bookings);
+    const bookings = await Booking.find({ guide: req.user._id })
+      // This gets the Traveler's name so the Guide can see who is booking them
+      .populate('traveler', 'name email') 
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(bookings);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Error fetching guide requests', error: error.message });
   }
 };
 
-// @desc    Update booking status (Confirm/Reject)
-// @route   PUT /api/bookings/:id
-// @access  Private (Guide Only)
-const updateBookingStatus = async (req, res) => {
-  const { status } = req.body;
-  
+// @desc    Update booking status (Guide accepting/rejecting a request)
+// @route   PUT /api/bookings/:id/status
+export const updateBookingStatus = async (req, res) => {
   try {
+    const { status } = req.body; 
     const booking = await Booking.findById(req.params.id);
 
     if (!booking) {
       return res.status(404).json({ message: 'Booking not found' });
     }
 
-    // Verify the logged-in user owns this guide profile
-    const guideProfile = await Guide.findById(booking.guide);
-    if (guideProfile.user.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: 'Not authorized to update this booking' });
+    // Ensure the person updating the status is actually the guide assigned to this booking
+    if (booking.guide.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this booking' });
     }
 
     booking.status = status;
     await booking.save();
 
-    res.json(booking);
+    res.status(200).json({ message: `Booking status updated to ${status}`, booking });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Error updating booking status', error: error.message });
   }
 };
-
-export { createBooking, getMyBookings, updateBookingStatus };

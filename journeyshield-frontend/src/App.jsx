@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import GroupTours from './pages/GroupTours';
 
 // Public Pages
 import HomePage from './pages/HomePage';
@@ -27,6 +28,7 @@ function App() {
       <Navbar />
       <main>
         <Routes>
+          <Route path="/group-tours" element={<GroupTours />} />
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
