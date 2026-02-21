@@ -82,14 +82,14 @@ const GuideDashboard = () => {
     setLoadingSearch(true);
     try {
       // Fetch Places
-      const placesRes = await axios.get('http://localhost:5000/api/search/places', {
+      const placesRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/search/places`, {
         params: { query: searchQuery, location: searchQuery }, // Passing searchQuery to location fixes Foursquare
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setPlaces(placesRes.data.results || []);
 
       // Fetch Weather
-      const weatherRes = await axios.get(`http://localhost:5000/api/weather/${searchQuery}`);
+      const weatherRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/weather/${searchQuery}`);
       setWeather(weatherRes.data);
     } catch (error) {
       console.error("Search error", error);
