@@ -1,28 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { createTour, getTours, kickTraveler, cancelTour } from '../services/tourService';
-import SimpleMap from '../components/common/SimpleMap';
-import SafetyModal from '../components/common/SafetyModal';
+
+// --- SVGS EXACTLY MATCHING YOUR DASHBOARD.JSX ---
+const DiscoverIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+const SafetyIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" /></svg>;
+const ManagementIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>;
+
+// Component for standard Links (Discover & Safety)
+const FeatureLinkCard = ({ to, icon, title }) => (
+  <Link to={to} className="bg-gray-800/40 p-4 rounded-lg border border-gray-700 text-center flex flex-col items-center justify-center aspect-square hover:border-yellow-400 hover:bg-gray-700/50 transition-colors">
+    <div className="w-10 h-10 mb-2 text-yellow-400">{icon}</div>
+    <span className="font-semibold text-sm text-gray-200">{title}</span>
+  </Link>
+);
+
+// Component for Action buttons (Tour Management)
+const ActionCard = ({ onClick, icon, title }) => (
+  <button onClick={onClick} className="bg-gray-800/40 p-4 rounded-lg border border-gray-700 text-center flex flex-col items-center justify-center aspect-square hover:border-yellow-400 hover:bg-gray-700/50 transition-colors w-full h-full">
+    <div className="w-10 h-10 mb-2 text-yellow-400">{icon}</div>
+    <span className="font-semibold text-sm text-gray-200">{title}</span>
+  </button>
+);
 
 const GuideDashboard = () => {
   const [user, setUser] = useState(null);
-  
-  // --- UI STATE (Matching Traveler Dashboard Cards) ---
-  const [activeView, setActiveView] = useState('management'); 
+  const [activeView, setActiveView] = useState('menu'); // Determines if we see the cards or the management UI
 
   // --- TOUR MANAGEMENT STATE ---
   const [myTours, setMyTours] = useState([]);
   const [formData, setFormData] = useState({ title: '', description: '', location: '', fixedDate: '', maxParticipants: 10, pricePerPerson: 50 });
   const [loadingTour, setLoadingTour] = useState(false);
   const [kickModal, setKickModal] = useState({ isOpen: false, tourId: null, travelerId: null, travelerName: '', reason: '' });
-
-  // --- DISCOVER & SAFETY STATE ---
-  const [searchQuery, setSearchQuery] = useState('');
-  const [places, setPlaces] = useState([]);
-  const [weather, setWeather] = useState(null);
-  const [loadingSearch, setLoadingSearch] = useState(false);
-  const [selectedPlace, setSelectedPlace] = useState(null);
-  const [isSafetyModalOpen, setIsSafetyModalOpen] = useState(false);
 
   useEffect(() => {
     const loggedInUser = JSON.parse(sessionStorage.getItem('user'));
@@ -32,9 +41,6 @@ const GuideDashboard = () => {
     }
   }, []);
 
-  // ==========================================
-  //        TOUR MANAGEMENT LOGIC
-  // ==========================================
   const fetchMyTours = async (guideId) => {
     try {
       const allTours = await getTours();
@@ -72,175 +78,109 @@ const GuideDashboard = () => {
     } catch (error) { alert('Failed to remove traveler.'); }
   };
 
-  // ==========================================
-  //        DISCOVER & SAFETY LOGIC
-  // ==========================================
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setLoadingSearch(true);
-    try {
-      // Fetch Places
-      const placesRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/search/places`, {
-        params: { query: searchQuery, location: searchQuery }, // Passing searchQuery to location fixes Foursquare
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
-      setPlaces(placesRes.data.results || []);
-
-      // Fetch Weather
-      const weatherRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/weather/${searchQuery}`);
-      setWeather(weatherRes.data);
-    } catch (error) {
-      console.error("Search error", error);
-    } finally {
-      setLoadingSearch(false);
-    }
-  };
-
   if (!user || user.role !== 'Guide') return <div className="text-center py-20 text-red-500 font-bold">Access Denied</div>;
 
   return (
-    <div className="container mx-auto px-6 py-10 max-w-6xl">
-      <div className="mb-10">
-        <h2 className="text-4xl font-bold text-white mb-2">Guide Dashboard</h2>
-        <p className="text-gray-400">Manage your tours, discover safe routes, and monitor alerts.</p>
+    <div className="container mx-auto p-6 text-white min-h-screen">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold">
+          Welcome, <span className="text-yellow-400">{user?.name}</span>
+        </h1>
+        <p className="text-lg text-gray-400 mt-2">Manage your tours and verify safe routes.</p>
       </div>
 
-      {/* --- DASHBOARD OPTIONS (CARDS) --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div onClick={() => setActiveView('management')} className={`cursor-pointer p-6 rounded-xl border-2 transition-all duration-300 ${activeView === 'management' ? 'bg-gray-800 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}>
-          <h3 className={`text-xl font-bold mb-2 ${activeView === 'management' ? 'text-yellow-400' : 'text-white'}`}>Tour Management</h3>
-          <p className="text-sm text-gray-400">Create, edit, and monitor the travelers in your hosted group tours.</p>
+      {/* --- DASHBOARD MENU VIEW (Exact UI match to Traveler) --- */}
+      {activeView === 'menu' ? (
+        <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto animate-fadeIn">
+          {/* Action Card changes the view to Tour Management */}
+          <ActionCard onClick={() => setActiveView('management')} icon={<ManagementIcon />} title="Tour Management" />
+          
+          {/* Link Cards use the EXACT same pages the Traveler uses! */}
+          <FeatureLinkCard to="/discover" icon={<DiscoverIcon />} title="Discover Places" />
+          <FeatureLinkCard to="/alerts" icon={<SafetyIcon />} title="Safety Alerts" />
         </div>
-        <div onClick={() => setActiveView('discover')} className={`cursor-pointer p-6 rounded-xl border-2 transition-all duration-300 ${activeView === 'discover' ? 'bg-gray-800 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}>
-          <h3 className={`text-xl font-bold mb-2 ${activeView === 'discover' ? 'text-yellow-400' : 'text-white'}`}>Discover Places</h3>
-          <p className="text-sm text-gray-400">Search for landmarks, restaurants, and hidden gems to add to your routes.</p>
-        </div>
-        <div onClick={() => setActiveView('safety')} className={`cursor-pointer p-6 rounded-xl border-2 transition-all duration-300 ${activeView === 'safety' ? 'bg-gray-800 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-gray-900 border-gray-700 hover:border-gray-500'}`}>
-          <h3 className={`text-xl font-bold mb-2 ${activeView === 'safety' ? 'text-yellow-400' : 'text-white'}`}>Safety Alerts</h3>
-          <p className="text-sm text-gray-400">Check live weather, emergency contacts, and area safety indexes.</p>
-        </div>
-      </div>
+      ) : (
+        
+        /* --- TOUR MANAGEMENT VIEW --- */
+        <div className="max-w-6xl mx-auto animate-fadeIn">
+          <button 
+            onClick={() => setActiveView('menu')} 
+            className="mb-8 flex items-center text-yellow-500 hover:text-yellow-400 font-bold transition-colors"
+          >
+            &larr; Back to Dashboard Menu
+          </button>
 
-      <div className="animate-fadeIn">
-        {/* ========================================= */}
-        {/* VIEW 1: TOUR MANAGEMENT                   */}
-        {/* ========================================= */}
-        {activeView === 'management' && (
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 bg-gray-800 p-6 rounded-lg border border-gray-700 h-fit shadow-lg">
-              <h3 className="text-xl font-semibold text-yellow-400 mb-6">Host New Tour</h3>
+            <div className="lg:col-span-1 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg h-fit">
+              <h3 className="text-xl font-bold text-yellow-400 mb-6">Host New Tour</h3>
               <form onSubmit={handleTourSubmit} className="space-y-4">
-                <input type="text" placeholder="Tour Title" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white outline-none focus:border-yellow-500" />
-                <textarea placeholder="Description" required rows="2" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white outline-none focus:border-yellow-500"></textarea>
+                <input type="text" placeholder="Tour Title" required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500" />
+                <textarea placeholder="Description" required rows="2" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500"></textarea>
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="text" placeholder="Location" required value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white outline-none focus:border-yellow-500" />
-                  <input type="date" required value={formData.fixedDate} onChange={(e) => setFormData({...formData, fixedDate: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white [color-scheme:dark] outline-none focus:border-yellow-500" />
+                  <input type="text" placeholder="Location" required value={formData.location} onChange={(e) => setFormData({...formData, location: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500" />
+                  <input type="date" required value={formData.fixedDate} onChange={(e) => setFormData({...formData, fixedDate: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white [color-scheme:dark] outline-none focus:border-yellow-500" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <input type="number" placeholder="Max Guests" min="2" required value={formData.maxParticipants} onChange={(e) => setFormData({...formData, maxParticipants: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white outline-none focus:border-yellow-500" />
-                  <input type="number" placeholder="Price ($)" min="0" required value={formData.pricePerPerson} onChange={(e) => setFormData({...formData, pricePerPerson: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white outline-none focus:border-yellow-500" />
+                  <input type="number" placeholder="Max Guests" min="2" required value={formData.maxParticipants} onChange={(e) => setFormData({...formData, maxParticipants: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500" />
+                  <input type="number" placeholder="Price ($)" min="0" required value={formData.pricePerPerson} onChange={(e) => setFormData({...formData, pricePerPerson: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500" />
                 </div>
-                <button type="submit" disabled={loadingTour} className="w-full mt-4 bg-yellow-500 text-black font-bold py-3 rounded hover:bg-yellow-400 transition-colors">
+                <button type="submit" disabled={loadingTour} className="w-full mt-4 bg-yellow-500 text-black font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">
                   {loadingTour ? 'Publishing...' : 'Publish Tour'}
                 </button>
               </form>
             </div>
 
             <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-xl font-semibold text-white">Active Hosted Tours</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Active Hosted Tours</h3>
               {myTours.map(tour => (
-                <div key={tour._id} className="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-md">
+                <div key={tour._id} className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-md">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h4 className="text-lg font-bold text-yellow-400">{tour.title}</h4>
-                      <p className="text-sm text-gray-400">📅 {new Date(tour.fixedDate).toLocaleDateString()} | 📍 {tour.location}</p>
+                      <h4 className="text-xl font-bold text-yellow-400">{tour.title}</h4>
+                      <p className="text-sm text-gray-400 mt-1">📅 {new Date(tour.fixedDate).toLocaleDateString()} &nbsp;|&nbsp; 📍 {tour.location}</p>
                     </div>
                     <div className="flex flex-col items-end space-y-2">
-                      <span className={`px-3 py-1 text-xs font-bold rounded-full ${tour.status === 'Full' ? 'bg-red-900/50 text-red-400' : 'bg-green-900/50 text-green-400'}`}>
+                      <span className={`px-4 py-1 text-xs font-bold rounded-full border ${tour.status === 'Full' ? 'bg-red-900/50 text-red-400 border-red-800' : 'bg-green-900/50 text-green-400 border-green-800'}`}>
                         {tour.status} ({tour.travelers.length}/{tour.maxParticipants})
                       </span>
-                      <button onClick={() => handleCancelTour(tour._id)} className="text-xs text-red-400 hover:text-red-300 underline">Cancel Tour</button>
+                      <button onClick={() => handleCancelTour(tour._id)} className="text-xs text-red-400 hover:text-red-300 underline mt-2">Cancel Tour</button>
                     </div>
                   </div>
-                  <div className="bg-gray-900 rounded-md p-4">
-                    <p className="text-xs text-gray-400 mb-2">Joined Travelers:</p>
+                  <div className="bg-gray-900 rounded-xl p-4 border border-gray-700">
+                    <p className="text-xs text-gray-400 mb-3 font-semibold uppercase tracking-wider">Joined Travelers</p>
                     {tour.travelers.map(t => (
-                      <div key={t._id} className="flex justify-between items-center bg-gray-800 px-3 py-2 rounded mb-2 border border-gray-700">
-                        <span className="text-sm text-white">{t.name}</span>
-                        <button onClick={() => setKickModal({ isOpen: true, tourId: tour._id, travelerId: t._id, travelerName: t.name, reason: '' })} className="text-xs bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-2 py-1 rounded transition-colors">Remove</button>
+                      <div key={t._id} className="flex justify-between items-center bg-gray-800 px-4 py-2 rounded-lg mb-2 border border-gray-700">
+                        <span className="text-sm text-white font-medium">👤 {t.name}</span>
+                        <button onClick={() => setKickModal({ isOpen: true, tourId: tour._id, travelerId: t._id, travelerName: t.name, reason: '' })} className="text-xs bg-red-900/50 border border-red-800 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1 rounded-md transition-colors">Remove</button>
                       </div>
                     ))}
-                    {tour.travelers.length === 0 && <p className="text-xs text-gray-500 italic">No travelers yet.</p>}
+                    {tour.travelers.length === 0 && <p className="text-sm text-gray-500 italic p-2">No travelers have joined this tour yet.</p>}
                   </div>
                 </div>
               ))}
-              {myTours.length === 0 && <p className="text-gray-400 bg-gray-800 p-6 rounded border border-gray-700 text-center">You haven't hosted any tours yet.</p>}
-            </div>
-          </div>
-        )}
-
-        {/* ========================================= */}
-        {/* VIEW 2 & 3: DISCOVER AND SAFETY           */}
-        {/* ========================================= */}
-        {(activeView === 'discover' || activeView === 'safety') && (
-          <div className="space-y-6">
-            <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
-              <h3 className="text-xl font-bold text-white mb-4">Search & Verify Safety</h3>
-              <form onSubmit={handleSearch} className="flex gap-4">
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search for a city, landmark, or region..." className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500" />
-                <button type="submit" disabled={loadingSearch} className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-3 rounded-lg transition-colors">
-                  {loadingSearch ? 'Searching...' : 'Search'}
-                </button>
-              </form>
-            </div>
-
-            {weather && activeView === 'safety' && (
-              <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-xl border border-gray-700 shadow-lg flex justify-between items-center">
-                <div><h3 className="text-3xl font-bold text-white">{weather.name}, {weather.sys?.country}</h3><p className="text-gray-400 capitalize">{weather.weather[0].description}</p></div>
-                <div className="text-center"><p className="text-5xl font-bold text-yellow-500">{Math.round(weather.main.temp)}°C</p></div>
-              </div>
-            )}
-
-            {places.length > 0 && (
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="h-[500px] rounded-xl overflow-hidden border border-gray-700 shadow-lg"><SimpleMap places={places} /></div>
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                  {places.map((place) => (
-                    <div key={place.fsq_id} className="bg-gray-800 p-5 rounded-lg border border-gray-700 flex justify-between items-center">
-                      <div>
-                        <h3 className="text-lg font-bold text-white mb-1">{place.name}</h3>
-                        <p className="text-sm text-gray-400">{place.location?.formatted_address}</p>
-                      </div>
-                      <button onClick={() => { setSelectedPlace(place); setIsSafetyModalOpen(true); }} className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white font-bold py-2 px-3 rounded text-sm transition-colors">
-                        Check Safety
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* --- KICK MODAL --- */}
-      {kickModal.isOpen && (
-        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-sm border border-gray-700">
-            <h3 className="text-lg font-bold text-red-400 mb-2">Remove {kickModal.travelerName}</h3>
-            <textarea placeholder="Reason required..." value={kickModal.reason} onChange={(e) => setKickModal({ ...kickModal, reason: e.target.value })} className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white mb-4 outline-none focus:border-red-500"></textarea>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setKickModal({ isOpen: false, tourId: null, travelerId: null, travelerName: '', reason: '' })} className="px-4 py-2 text-sm text-gray-300 bg-gray-700 rounded hover:bg-gray-600">Cancel</button>
-              <button onClick={handleConfirmKick} className="px-4 py-2 text-sm font-bold text-white bg-red-600 rounded hover:bg-red-500">Confirm</button>
+              {myTours.length === 0 && <div className="bg-gray-800 p-10 rounded-2xl border border-gray-700 text-center"><p className="text-gray-400 text-lg">You haven't hosted any tours yet.</p></div>}
             </div>
           </div>
         </div>
       )}
 
-      {/* --- SAFETY MODAL --- */}
-      <SafetyModal isOpen={isSafetyModalOpen} onClose={() => setIsSafetyModalOpen(false)} place={selectedPlace} />
+      {/* --- KICK MODAL --- */}
+      {kickModal.isOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-gray-800 p-8 rounded-2xl w-full max-w-md border border-gray-700 shadow-2xl">
+            <h3 className="text-2xl font-bold text-red-400 mb-3">Remove Traveler</h3>
+            <p className="text-sm text-gray-300 mb-6">
+              You are permanently removing <span className="text-white font-bold">{kickModal.travelerName}</span> from this tour.
+            </p>
+            <label className="block text-sm text-gray-400 mb-2 font-medium">Reason for removal:</label>
+            <textarea placeholder="e.g., Unsafe behavior..." value={kickModal.reason} onChange={(e) => setKickModal({ ...kickModal, reason: e.target.value })} className="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:border-red-500 shadow-inner min-h-[100px]"></textarea>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setKickModal({ isOpen: false, tourId: null, travelerId: null, travelerName: '', reason: '' })} className="px-6 py-3 text-sm font-bold text-gray-300 bg-gray-700 rounded-xl hover:bg-gray-600 transition-colors">Cancel</button>
+              <button onClick={handleConfirmKick} className="px-6 py-3 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-500 transition-colors shadow-lg">Confirm Removal</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
