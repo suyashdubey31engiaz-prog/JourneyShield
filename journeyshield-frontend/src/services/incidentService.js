@@ -1,28 +1,18 @@
 import axios from 'axios';
 
+// Must explicitly point to your backend port 5000
+const API_URL = 'http://localhost:5000/api/safety'; 
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/incidents';
-
-const getNearbyIncidents = (lat, lon, radius = 5) => {
-  return axios.get(API_URL, {
-    params: { lat, lon, radius }
-  });
-};
-
-const reportIncident = (incidentData) => {
+const getNearbyIncidents = async (lat, lon, radiusKm = 10) => {
+  // Grab the logged-in user's token for security
   const user = JSON.parse(sessionStorage.getItem('user'));
-  if (!user || !user.token) return Promise.reject("Not authorized");
-
-  return axios.post(API_URL, incidentData, {
-    headers: {
-      Authorization: `Bearer ${user.token}`,
-    },
-  });
+  const config = {
+    headers: user && user.token ? { Authorization: `Bearer ${user.token}` } : {},
+    params: { lat, lon, radius: radiusKm }
+  };
+  
+  // Note: We are hitting the REAL incident endpoint: http://localhost:5000/api/safety/incidents
+  return await axios.get(`${API_URL}/incidents`, config);
 };
 
-const incidentService = {
-  getNearbyIncidents,
-  reportIncident
-};
-
-export default incidentService;
+export default { getNearbyIncidents };

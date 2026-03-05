@@ -1,21 +1,15 @@
 import express from 'express';
-import { registerUser, loginUser, getGuides } from '../controllers/userController.js'; 
-
-// Uncomment this if you have the protect middleware for user routes
-// import { protect } from '../middleware/authMiddleware.js';
+// Import the new functions
+import { sendRegistrationOTP, verifyAndRegister, loginUser, getGuides } from '../controllers/userController.js'; 
 
 const router = express.Router();
 
-// 1. SPECIFIC ROUTES MUST GO FIRST
-// This fixes the 404 error by preventing Express from treating 'guides' as a dynamic ID
-router.get('/guides', getGuides);
+// The new two-step routes
+router.post('/send-otp', sendRegistrationOTP);
+router.post('/verify-register', verifyAndRegister);
 
-// 2. STANDARD AUTH ROUTES
-router.post('/register', registerUser);
+// Your existing routes
 router.post('/login', loginUser);
-
-// 3. DYNAMIC ROUTES GO LAST
-// If you ever add a route to get a specific user by ID, it must go down here!
-// Example: router.get('/:id', getUserById);
+router.get('/guides', getGuides);
 
 export default router;

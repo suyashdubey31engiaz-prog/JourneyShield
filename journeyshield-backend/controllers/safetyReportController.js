@@ -1,18 +1,15 @@
 import axios from 'axios';
 import Incident from '../models/incidentModel.js';
 
-// Helper to calculate safety score
+// --- Helper Functions ---
 const calculateSafetyScore = (incidents) => {
     let score = 100;
-    
     incidents.forEach(incident => {
         if (incident.severity === 'Critical') score -= 20;
         else if (incident.severity === 'High') score -= 10;
         else if (incident.severity === 'Medium') score -= 5;
-        else score -= 2; // Low severity
+        else score -= 2; 
     });
-
-    // Ensure score doesn't drop below 0
     return Math.max(0, score);
 };
 
@@ -26,7 +23,6 @@ const fetchCombinedReport = async (lat, lon, locationName) => {
     const openWeatherKey = process.env.OPENWEATHER_API_KEY;
     const tomTomKey = process.env.TOMTOM_API_KEY;
 
-    // 1. Fetch External Data (Weather & Traffic)
     const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${openWeatherKey}&units=metric`;
     const trafficUrl = `https://api.tomtom.com/traffic/services/4/flowSegmentData/absolute/10/json?point=${lat},${lon}&key=${tomTomKey}`;
 
@@ -35,18 +31,16 @@ const fetchCombinedReport = async (lat, lon, locationName) => {
         axios.get(trafficUrl)
     ]);
 
-    // 2. Fetch Internal Data (Your Incident Database)
-    // Find incidents within 10km radius
+    // This still uses the 10km radius strictly for the Safety Analytics Score calculation
     const incidents = await Incident.find({
         location: {
             $near: {
-                $geometry: { type: 'Point', coordinates: [lon, lat] }, // GeoJSON: [Lon, Lat]
-                $maxDistance: 10000 // 10km
+                $geometry: { type: 'Point', coordinates: [lon, lat] }, 
+                $maxDistance: 10000 
             }
         }
     });
 
-    // 3. Calculate Score
     const safetyScore = calculateSafetyScore(incidents);
     const safetyStatus = getSafetyLevel(safetyScore);
 
@@ -56,58 +50,83 @@ const fetchCombinedReport = async (lat, lon, locationName) => {
             `${weatherRes.value.data.main.temp}°C, ${weatherRes.value.data.weather[0].description}` : 'Unavailable',
         traffic: trafficRes.status === 'fulfilled' ? 
             `Flow: ${trafficRes.value.data.flowSegmentData.currentSpeed} km/h` : 'Unavailable',
-        
-        // NEW SAFETY DATA
         safetyScore: safetyScore,
         safetyLevel: safetyStatus.level,
         safetyColor: safetyStatus.color,
         incidentCount: incidents.length,
-        recentIncidents: incidents.slice(0, 3).map(i => i.type) // Show top 3 recent types
+        recentIncidents: incidents.slice(0, 3).map(i => i.type) 
     };
 };
 
+// --- Controllers ---
+
+// 1. Generate Report by City Name
 const getSafetyReportByCity = async (req, res) => {
     const { city } = req.query;
     if (!city) return res.status(400).json({ message: 'City parameter is required' });
 
     try {
-        const openWeatherKey = process.env.OPENWEATHER_API_KEY;
-        const geocodeUrl = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${openWeatherKey}`;
+        const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
+        const geocodeResponse = await axios.get(geocodeUrl, { headers: { 'User-Agent': 'JourneyShield-Travel-App/1.0' } });
         
-        const geocodeResponse = await axios.get(geocodeUrl);
         if (geocodeResponse.data.length === 0) {
-            throw new Error(`Geocoding failed: City '${city}' not found.`);
+            throw new Error(`City '${city}' not found.`);
         }
         
-        const { lat, lon, name } = geocodeResponse.data[0];
+        const lat = parseFloat(geocodeResponse.data[0].lat);
+        const lon = parseFloat(geocodeResponse.data[0].lon);
+        const name = geocodeResponse.data[0].name || city;
+
         const report = await fetchCombinedReport(lat, lon, name);
         res.json(report);
     } catch (error) {
-        console.error("Safety Report Error:", error.message);
+        console.error("Safety Report City Error:", error.message);
         res.status(500).json({ message: 'Failed to generate safety report.' });
     }
 };
 
+// 2. Generate Report by Coordinates
 const getSafetyReportByCoords = async (req, res) => {
     const { lat, lon } = req.query;
     if (!lat || !lon) return res.status(400).json({ message: 'Lat/Lon parameters are required' });
 
     try {
-        const openWeatherKey = process.env.OPENWEATHER_API_KEY;
-        // Simple reverse geocode to get name (optional, can skip if unavailable)
         let locationName = "Current Location";
+        
         try {
-             const reverseGeocodeUrl = `http://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${openWeatherKey}`;
-             const reverseRes = await axios.get(reverseGeocodeUrl);
-             if(reverseRes.data.length > 0) locationName = reverseRes.data[0].name;
-        } catch(e) { console.log("Reverse geocode failed, using default name"); }
+             const reverseUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+             const reverseRes = await axios.get(reverseUrl, { headers: { 'User-Agent': 'JourneyShield-Travel-App/1.0' } });
+             
+             if(reverseRes.data && reverseRes.data.address) {
+                 const addr = reverseRes.data.address;
+                 locationName = addr.city || addr.state_district || addr.town || addr.county || addr.state || "Current Location";
+             }
+        } catch(e) { 
+             console.error("Reverse geocode failed:", e.message);
+        }
 
         const report = await fetchCombinedReport(parseFloat(lat), parseFloat(lon), locationName);
         res.json(report);
     } catch (error) {
-        console.error("Safety Report Error:", error.message);
+        console.error("Safety Report Coords Error:", error.message);
         res.status(500).json({ message: 'Failed to generate safety report.' });
     }
 };
 
-export { getSafetyReportByCity, getSafetyReportByCoords };
+// 3. NEW DIAGNOSTIC MODE: Fetch ALL Incidents for the Map markers
+const getIncidents = async (req, res) => {
+    try {
+        // TEMPORARY BYPASS: Grabbing all incidents instead of just nearby ones
+        const incidents = await Incident.find({});
+        
+        // This log will prove if the seeder actually saved data to the database
+        console.log(`[DEBUG] Successfully fetched ${incidents.length} incidents from MongoDB!`);
+        
+        res.status(200).json(incidents);
+    } catch (error) {
+        console.error("Incident Fetch Error:", error.message);
+        res.status(500).json({ message: 'Failed to fetch nearby incidents' });
+    }
+};
+
+export { getSafetyReportByCity, getSafetyReportByCoords, getIncidents };

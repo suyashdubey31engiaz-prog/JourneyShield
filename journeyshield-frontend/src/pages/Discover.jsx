@@ -3,164 +3,163 @@ import { MapContainer, TileLayer, Marker, Tooltip, Polyline, useMap, CircleMarke
 import L from 'leaflet';
 import searchService from '../services/searchService';
 import routeService from '../services/routeService';
-import incidentService from '../services/incidentService'; // Import the new incident service
+import incidentService from '../services/incidentService';
 
-// --- LEAFLET ICON FIX ---
-// This fixes the issue where markers don't show up in React Leaflet by default
+// --- LEAFLET ICON FIX (Restores Blue/Green markers) ---
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
-});
+let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
-
-// Custom Icon for the "User's Location" to distinguish it from search results
-let userIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+let userIcon = new L.Icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
 // --- END ICON FIX ---
 
-// Component to programmatically move the map view
-const MapController = ({ center, route }) => {
+// Component that dynamically interacts with the map instance
+const MapController = ({ center, route, onMapMove }) => {
   const map = useMap();
+  
+  // Update view only when the 'center' state changes explicitly (from a search)
   useEffect(() => {
-    if (route && route.length > 0) {
-      // If a route exists, zoom to fit the whole path
-      const bounds = L.latLngBounds(route);
-      map.flyToBounds(bounds, { padding: [50, 50] });
-    } else if (center) {
-      // Otherwise, just fly to the specific center point
+    if (center) {
       map.flyTo(center, 13);
     }
-  }, [center, route, map]);
+  }, [center, map]);
+
+  // Update view to show the entire routing path
+  useEffect(() => {
+    if (route && route.length > 0) {
+      const bounds = L.latLngBounds(route);
+      map.flyToBounds(bounds, { padding: [50, 50] });
+    }
+  }, [route, map]);
+
+  // FEATURE: When the user finishes dragging the map, fetch new incidents/weather for that area
+  useEffect(() => {
+    map.on('moveend', () => {
+      const newCenter = map.getCenter();
+      if(onMapMove) onMapMove([newCenter.lat, newCenter.lng]);
+    });
+    return () => map.off('moveend'); // Cleanup on unmount
+  }, [map, onMapMove]);
+
   return null;
 };
 
 const Discover = () => {
-  // State Management
-  const [mapCenter, setMapCenter] = useState([20.5937, 78.9629]); // Default: Center of India
+  // --- STATE MANAGEMENT ---
+  const [mapCenter, setMapCenter] = useState([20.5937, 78.9629]); // Default: India
   const [userLocation, setUserLocation] = useState(null);
-  const [places, setPlaces] = useState([]);
-  const [route, setRoute] = useState([]);
-  const [incidents, setIncidents] = useState([]); // Store crime/safety incidents
+  const [places, setPlaces] = useState([]); // Multiple search results
+  const [route, setRoute] = useState([]); // Line coordinates for the map
+  const [incidents, setIncidents] = useState([]); // DB crime hotspots
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPlaceId, setSelectedPlaceId] = useState(null);
 
-  // 1. Get User's Current Location on Mount
+  // 1. Get User's Current Location on Start
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
           setUserLocation([latitude, longitude]);
-          setMapCenter([latitude, longitude]);
+          setMapCenter([latitude, longitude]); // Move map to user
         },
-        (error) => {
-          console.error("Error getting location:", error);
-          // Optional: Set a default fallback location if GPS is denied
-        }
+        (error) => { console.error("Location access denied", error); }
       );
     }
   }, []);
 
-  // 2. Fetch Safety Incidents whenever the Map Center changes
-  // This ensures that if you search for "Delhi", you see incidents in Delhi, not just where you are.
-  useEffect(() => {
-    if (mapCenter) {
-      incidentService.getNearbyIncidents(mapCenter[0], mapCenter[1], 15) // 15km radius
+  // 2. FEATURE RESTORED: Fetch REAL incidents within 10km whenever the Map Center changes
+  const fetchLocalSafetyData = (newCenter) => {
+    if (newCenter) {
+      incidentService.getNearbyIncidents(newCenter[0], newCenter[1], 10) // 10km radius
         .then(response => {
-          setIncidents(response.data);
+          // Triggers the display of RED circles
+          setIncidents(response.data || []); 
         })
-        .catch(error => {
-          console.error("Failed to fetch incidents:", error);
-        });
+        .catch(error => { console.error("Could not fetch DB incidents:", error); });
     }
+  };
+
+  // Initial incident fetch based on user location
+  useEffect(() => {
+    if(mapCenter) fetchLocalSafetyData(mapCenter);
   }, [mapCenter]);
 
-  // 3. Handle Search Submission
+  // 3. Handle Search Submission (Find multiple Prayagrajs)
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchTerm) return;
     
     setLoading(true);
-    setPlaces([]);
-    setRoute([]);
+    setRoute([]); // Clear existing routes
+    setSelectedPlaceId(null);
 
     try {
       const response = await searchService.searchPlaces(searchTerm);
-      setPlaces(response.data);
+      
+      // Mapped from OpenStreetMap Nominatim results
+      const placesArray = response.data.results || [];
+      
+      // FEATURE RESTORED: Sidebar populates with multiple choices
+      setPlaces(placesArray); 
 
-      // If results found, move map to the first result
-      if (response.data.length > 0) {
-        const firstPlace = response.data[0];
-        setMapCenter([
-          firstPlace.geocodes.main.latitude, 
-          firstPlace.geocodes.main.longitude
-        ]);
-      }
+      // MOVE MAP TO FIRST RESULT IMMEDIATELY
+      if (placesArray.length > 0) {
+        const first = placesArray[0];
+        if (first.geocodes?.main) {
+          setMapCenter([first.geocodes.main.latitude, first.geocodes.main.longitude]);
+        }
+      } else { alert("No results found."); }
     } catch (error) {
-      console.error("Search error:", error);
-      alert("Search failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      console.error("Search failure:", error);
+      alert("Search failed. Try again.");
+    } finally { setLoading(false); }
   };
 
-  // 4. Calculate Route on Place Click
+  // 4. FEATURE RESTORED: Calculate Route (User -> Selected Place)
   const handlePlaceClick = async (place) => {
     if (!userLocation) {
-      alert("Please enable location services to calculate a route.");
+      alert("Enable location to calculate routes.");
       return;
     }
 
-    const destination = [place.geocodes.main.latitude, place.geocodes.main.longitude];
-    
-    // Optimistically move map to destination immediately
-    setMapCenter(destination);
+    if (!place.geocodes?.main) return;
+
+    const dest = [place.geocodes.main.latitude, place.geocodes.main.longitude];
+    setMapCenter(dest); // Move map to look at the destination
+    setSelectedPlaceId(place.fsq_id || place.id);
 
     try {
+      // Calls the OSRM Routing service
       const response = await routeService.getRoute(
-        userLocation[0], 
-        userLocation[1], 
-        destination[0], 
-        destination[1]
+        userLocation[0], userLocation[1], // Start
+        dest[0], dest[1] // End
       );
-      setRoute(response.data);
+      
+      // FEATURE RESTORED: Draws the BLUE line path on the map
+      setRoute(response.data); 
     } catch (error) {
-      console.error("Routing error:", error);
-      alert("Could not calculate a route.");
+      console.error("Routing failure:", error);
+      alert("Could not create route.");
+      setRoute([]);
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)]"> {/* Adjust height based on Navbar */}
+    <div className="flex h-[calc(100vh-64px)] text-white">
       
-      {/* SIDEBAR: Search & Results */}
+      {/* SIDEBAR */}
       <div className="w-1/3 bg-gray-900/90 p-6 overflow-y-auto border-r border-gray-700">
         <h2 className="text-2xl font-bold text-yellow-400 mb-4">Discover Places</h2>
         
         <form onSubmit={handleSearch} className="flex gap-2 mb-6">
           <input 
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search e.g. 'Museums in Delhi'"
-            className="flex-grow bg-gray-800 border border-gray-600 text-white rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 placeholder-gray-500"
+            type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search e.g. 'Prayagraj Museums'"
+            className="flex-grow bg-gray-800 border border-gray-600 rounded-md py-2 px-3 placeholder-gray-500 focus:ring-2 focus:ring-yellow-500 outline-none"
           />
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-md transition-colors disabled:opacity-50"
-          >
+          <button type="submit" disabled={loading} className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-md disabled:opacity-50">
             {loading ? '...' : 'Go'}
           </button>
         </form>
@@ -172,12 +171,12 @@ const Discover = () => {
           
           {places.map((place) => (
             <div 
-              key={place.id} 
+              key={place.fsq_id || place.id} 
               onClick={() => handlePlaceClick(place)} 
-              className="bg-gray-800 p-4 rounded-lg border border-gray-700 cursor-pointer hover:border-yellow-400 hover:bg-gray-750 transition-all"
+              className={`bg-gray-800 p-4 rounded-lg border cursor-pointer hover:border-yellow-400 hover:bg-gray-750 transition-all ${(selectedPlaceId === (place.fsq_id || place.id)) ? 'border-yellow-400 ring-2 ring-yellow-500' : 'border-gray-700'}`}
             >
               <h3 className="font-semibold text-lg text-gray-100">{place.name}</h3>
-              <p className="text-sm text-gray-400 mt-1">{place.location.formatted_address}</p>
+              <p className="text-sm text-gray-400 mt-1">{place.location?.formatted_address || "Address unavailable"}</p>
             </div>
           ))}
         </div>
@@ -185,91 +184,64 @@ const Discover = () => {
 
       {/* MAP AREA */}
       <div className="w-2/3 h-full relative">
-        <MapContainer 
-          center={mapCenter} 
-          zoom={13} 
-          style={{ height: '100%', width: '100%' }} 
-          zoomControl={false}
-        >
-          <TileLayer 
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
-            attribution='&copy; OpenStreetMap contributors' 
-          />
+        <MapContainer center={mapCenter} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false} >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
           
-          {/* Controls Map Movement */}
-          <MapController center={mapCenter} route={route} />
+          {/* Controls view movements and triggers incident fetches on moves */}
+          <MapController center={mapCenter} route={route} onMapMove={fetchLocalSafetyData} />
 
-          {/* 1. User Location Marker (Green) */}
+          {/* 1. Green Marker for User */}
           {userLocation && (
             <Marker position={userLocation} icon={userIcon}>
-              <Tooltip direction="top" offset={[0, -20]} opacity={1}>
-                You are here
-              </Tooltip>
+              <Tooltip direction="top" offset={[0, -20]}>You are here</Tooltip>
             </Marker>
           )}
 
-          {/* 2. Search Result Markers (Blue) */}
-          {places.map(place => (
-            <Marker 
-              key={place.id} 
-              position={[place.geocodes.main.latitude, place.geocodes.main.longitude]}
-              eventHandlers={{
-                click: () => handlePlaceClick(place),
-              }}
-            >
-              <Tooltip direction="top" className="permanent-tooltip">
-                {place.name}
-              </Tooltip>
-            </Marker>
-          ))}
+          {/* 2. FEATURE RESTORED: Multiple Blue Markers for ALL Search Results */}
+          {places.map(place => {
+            if (!place.geocodes?.main) return null; // Skip if no coords
+            return (
+              <Marker 
+                key={place.fsq_id || place.id} 
+                position={[place.geocodes.main.latitude, place.geocodes.main.longitude]}
+                eventHandlers={{ click: () => handlePlaceClick(place) }} // Clicking marker starts routing
+              >
+                <Tooltip direction="top">{place.name}</Tooltip>
+              </Marker>
+            );
+          })}
 
-          {/* 3. Safety Incident Markers (Red Circles) */}
-          {incidents.map(incident => (
+          {/* 3. FEATURE RESTORED: Red Circles for nearby DB Incidents (10km range) */}
+          {incidents && incidents.length > 0 && incidents.map(incident => (
             <CircleMarker 
               key={incident._id} 
-              center={[incident.location.coordinates[1], incident.location.coordinates[0]]} // GeoJSON is [lon, lat], Leaflet needs [lat, lon]
-              pathOptions={{ 
-                color: 'red', 
-                fillColor: '#ef4444', 
-                fillOpacity: 0.6, 
-                weight: 1 
-              }}
-              radius={12} // Size of the crime hotspot
+              // Convert GeoJSON [lon, lat] to Leaflet [lat, lon]
+              center={[incident.location.coordinates[1], incident.location.coordinates[0]]} 
+              pathOptions={{ color: 'red', fillColor: '#ef4444', fillOpacity: 0.6, weight: 1 }}
+              radius={12} // The visual radius on map
             >
               <Popup>
                 <div className="text-gray-800 min-w-[150px]">
                   <h4 className="font-bold text-red-600 uppercase text-xs mb-1">{incident.type}</h4>
                   <p className="text-sm font-medium mb-1">{incident.description}</p>
-                  <div className="text-xs text-gray-500 border-t pt-1 mt-1 flex justify-between">
-                    <span>Severity: {incident.severity}</span>
-                    <span>{new Date(incident.createdAt).toLocaleDateString()}</span>
-                  </div>
+                  <p className="text-xs text-gray-500 border-t pt-1 mt-1">Severity: {incident.severity}</p>
                 </div>
               </Popup>
             </CircleMarker>
           ))}
 
-          {/* 4. Route Line (Blue Path) */}
-          {route.length > 0 && (
-            <Polyline 
-              pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.8 }} 
-              positions={route} 
-            />
+          {/* 4. FEATURE RESTORED: The actual blue Route Line path */}
+          {route && route.length > 0 && (
+            <Polyline pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.8 }} positions={route} />
           )}
 
         </MapContainer>
         
-        {/* Map Legend Overlay */}
+        {/* Map Legend */}
         <div className="absolute bottom-5 right-5 bg-gray-900/80 p-3 rounded-lg border border-gray-600 text-xs text-white z-[1000]">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-3 h-3 rounded-full bg-green-500 block"></span> You
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-3 h-3 rounded-full bg-blue-500 block"></span> Places
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 block"></span> Incident/Crime
-          </div>
+          <div className="flex items-center gap-2 mb-1"><span className="w-3 h-3 rounded-full bg-green-500 block"></span> You</div>
+          <div className="flex items-center gap-2 mb-1"><span className="w-3 h-3 rounded-full bg-blue-500 block"></span> Places</div>
+          <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-500 block"></span> Incident/Crime</div>
         </div>
 
       </div>

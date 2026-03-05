@@ -1,20 +1,14 @@
 import axios from 'axios';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/route';
+const API_URL = 'http://localhost:5000/api/search';
 
-
-const getRoute = (startLat, startLon, endLat, endLon) => {
-  const user = JSON.parse(sessionStorage.getItem('user'));
-  if (!user || !user.token) return Promise.reject(new Error("Not authorized"));
-  const config = {
-    headers: { Authorization: `Bearer ${user.token}` },
+const getRoute = async (startLat, startLon, endLat, endLon) => {
+  // Call our new highly-accurate TomTom backend route
+  const response = await axios.get(`${API_URL}/route`, {
     params: { startLat, startLon, endLat, endLon }
-  };
-  return axios.get(API_URL, config);
+  });
+  
+  return { data: response.data }; 
 };
 
-const routeService = {
-  getRoute,
-};
-
-export default routeService;
+export default { getRoute };

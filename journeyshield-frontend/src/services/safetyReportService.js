@@ -1,27 +1,25 @@
 import axios from 'axios';
 
+// Pointing to your REAL safety API
+const API_URL = 'http://localhost:5000/api/safety';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/safety-report';
-
-const getSafetyReport = (city, lat, lon) => {
+const getSafetyReport = async (city, lat, lon) => {
+  // Grab the token so the backend allows the request
   const user = JSON.parse(sessionStorage.getItem('user'));
   const config = {
-    headers: { Authorization: `Bearer ${user?.token}` },
-    params: {}
+    headers: user && user.token ? { Authorization: `Bearer ${user.token}` } : {}
   };
 
+  // If the user typed a city in the search bar
   if (city) {
-    config.params.city = city;
-    return axios.get(API_URL, config);
-  } else if (lat && lon) {
-    config.params.lat = lat;
-    config.params.lon = lon;
-    return axios.get(`${API_URL}/current`, config);
+    return await axios.get(`${API_URL}?city=${city}`, config);
+  } 
+  // If it's automatically loading their GPS location
+  else if (lat && lon) {
+    return await axios.get(`${API_URL}/current?lat=${lat}&lon=${lon}`, config);
   }
+  
+  throw new Error("No location provided");
 };
 
-const safetyReportService = {
-  getSafetyReport,
-};
-
-export default safetyReportService;
+export default { getSafetyReport };
