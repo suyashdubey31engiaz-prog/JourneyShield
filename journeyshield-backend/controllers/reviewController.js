@@ -1,84 +1,105 @@
-import Review from '../models/reviewModel.js';
-import Guide from '../models/guideModel.js';
+import Review  from '../models/reviewModel.js';
+import Guide   from '../models/guideModel.js';
 import Booking from '../models/bookingModel.js';
 
-// @desc    Create or Update a review for a guide
-// @route   POST /api/reviews
-// @access  Private (Traveler)
+// POST /api/reviews
 const createOrUpdateReview = async (req, res) => {
   const { guideId, rating, comment, bookingId } = req.body;
 
+  console.log('[Review] incoming:', { guideId, rating, bookingId, userId: req.user?._id });
+
   try {
-    // 1. Verify the booking exists, is completed, and belongs to this user
+    // ── 1. Verify booking is Completed and belongs to this traveler ──────────
     const booking = await Booking.findOne({
-      _id: bookingId,
+      _id:      bookingId,
       traveler: req.user._id,
-      guide: guideId,
-      status: 'Completed'
+      guide:    guideId,   // bookingModel.guide refs User — guideId is User._id ✓
+      status:   'Completed',
     });
 
     if (!booking) {
-      return res.status(400).json({ message: 'Invalid booking. You can only review completed trips.' });
-    }
-
-    // 2. Enforce "No multiple reviews on single trip"
-    if (booking.isReviewed) {
-      return res.status(400).json({ message: 'This trip has already been used to leave a review.' });
-    }
-
-    // 3. Check if User has EVER reviewed this Guide before
-    const existingReview = await Review.findOne({
-      user: req.user._id,
-      guide: guideId
-    });
-
-    if (existingReview) {
-      // UPDATE existing review (The "Experience Again" Logic)
-      existingReview.rating = Number(rating);
-      existingReview.comment = comment;
-      // We update the timestamp to show it's fresh
-      existingReview.updatedAt = Date.now(); 
-      await existingReview.save();
-    } else {
-      // CREATE new review (First time experience)
-      await Review.create({
-        user: req.user._id,
-        guide: guideId,
-        rating: Number(rating),
-        comment
+      return res.status(400).json({
+        message: 'Invalid booking. You can only review completed trips.',
       });
     }
 
-    // 4. Mark this booking as 'used' for reviewing
+    if (booking.isReviewed) {
+      return res.status(400).json({ message: 'You have already reviewed this trip.' });
+    }
+
+    // ── 2. Resolve Guide document _id — auto-create if missing ───────────────
+    // bookingModel.guide  = User._id   (refs User collection)
+    // reviewModel.guide   = Guide._id  (refs Guide collection — different!)
+    // Guides who registered before the auto-create fix was deployed won't have
+    // a Guide document. Instead of blocking the review, we create it now.
+    let guideProfile = await Guide.findOne({ user: guideId });
+
+    if (!guideProfile) {
+      console.log('[Review] Guide profile missing — auto-creating for user:', guideId);
+      guideProfile = await Guide.create({
+        user:     guideId,
+        location: '',
+        bio:      '',
+      });
+    }
+
+    const guideDocId = guideProfile._id;
+
+    // ── 3. Create or update the review ───────────────────────────────────────
+    const existing = await Review.findOne({ user: req.user._id, guide: guideDocId });
+
+    if (existing) {
+      existing.rating  = Number(rating);
+      existing.comment = comment;
+      await existing.save();
+    } else {
+      await Review.create({
+        user:    req.user._id,
+        guide:   guideDocId,
+        rating:  Number(rating),
+        comment,
+      });
+    }
+
+    // ── 4. Mark booking as reviewed ──────────────────────────────────────────
     booking.isReviewed = true;
     await booking.save();
 
-    // 5. Recalculate Guide's Average Rating
-    const reviews = await Review.find({ guide: guideId });
-    const avgRating = reviews.reduce((acc, item) => item.rating + acc, 0) / reviews.length;
+    // ── 5. Recalculate guide's average rating ─────────────────────────────────
+    const allReviews = await Review.find({ guide: guideDocId });
+    const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
 
-    await Guide.findByIdAndUpdate(guideId, {
-      rating: avgRating.toFixed(1),
-      reviews: reviews.length
+    await Guide.findByIdAndUpdate(guideDocId, {
+      rating:  Number(avg.toFixed(1)),
+      reviews: allReviews.length,
     });
 
-    res.status(200).json({ message: 'Review updated successfully' });
+    console.log('[Review] submitted successfully');
+    res.status(200).json({ message: 'Review submitted successfully' });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    console.error('[Review] ERROR:', error);
+    res.status(500).json({ message: 'Server Error', detail: error.message });
   }
 };
 
-// @desc    Get reviews for a specific guide
-// @route   GET /api/reviews/:guideId
-// @access  Public
+// GET /api/reviews/:guideId
+// Accepts either a Guide._id or a User._id — handles both gracefully
 const getGuideReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ guide: req.params.guideId })
+    let guideDocId = req.params.guideId;
+
+    // If no reviews found by direct Guide._id, try resolving via User._id
+    const direct = await Review.countDocuments({ guide: guideDocId });
+    if (direct === 0) {
+      const profile = await Guide.findOne({ user: guideDocId });
+      if (profile) guideDocId = profile._id;
+    }
+
+    const reviews = await Review.find({ guide: guideDocId })
       .populate('user', 'name')
-      .sort({ updatedAt: -1 }); // Sort by newest update
-    
+      .sort({ updatedAt: -1 });
+
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: error.message });

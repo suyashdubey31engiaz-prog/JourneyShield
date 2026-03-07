@@ -23,25 +23,23 @@ const bookingSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  // NEW: Determines if this is a solo booking or a private group
+  // Determines if this is a solo booking or a private group
   isPrivateGroup: {
     type: Boolean,
-    default: false
+    default: false,
   },
-  // NEW: The list of people the traveler is bringing with them
+  // The list of people the traveler is bringing
   groupMembers: [{
-    name: { 
-      type: String, 
-      required: true 
-    },
-    age: { 
-      type: Number 
-    },
-    notes: { 
-      type: String 
-      // Example: "Allergic to peanuts", "Uses a wheelchair", etc.
-    }
-  }]
+    name: { type: String, required: true },
+    age:  { type: Number },
+    notes: { type: String },
+  }],
+  // FIX: This field is referenced in reviewController but was missing from the model.
+  // Prevents a traveler from submitting multiple reviews for the same completed booking.
+  isReviewed: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 const Booking = mongoose.model('Booking', bookingSchema);
