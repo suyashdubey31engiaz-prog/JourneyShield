@@ -1,13 +1,15 @@
 import express from 'express';
-import { createOrUpdateReview, getGuideReviews } from '../controllers/reviewController.js';
+import {
+  createOrUpdateReview,
+  getGuideReviews,
+  getMyReviewForGuide,
+} from '../controllers/reviewController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/')
-  .post(protect, createOrUpdateReview); // Uses the new logic
-
-router.route('/:guideId')
-  .get(getGuideReviews);
+router.post('/',                          protect, createOrUpdateReview);
+router.get('/:guideId',                            getGuideReviews);
+router.get('/:guideId/my',               protect, getMyReviewForGuide);
 
 export default router;
