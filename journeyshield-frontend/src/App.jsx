@@ -1,26 +1,20 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from './components/layout/Navbar';
+import Navbar         from './components/layout/Navbar';
 import ProtectedRoute from './components/common/ProtectedRoute';
-import GroupTours from './pages/GroupTours';
 
-// Public Pages
-import HomePage from './pages/HomePage';
-import Login from './pages/Login';
-import Registration from './pages/Registration';
-
-// Protected Pages (Common)
-import Dashboard from './pages/Dashboard';
-import Alerts from './pages/Alerts';
-import MyBookings from './pages/MyBookings'; // New
-
-// Protected Pages (Traveler)
-import Discover from './pages/Discover';
-import Guides from './pages/Guides';
-
-// Protected Pages (Guide)
-import GuideDashboard from './pages/GuideDashboard';
-import GuideReviews from './pages/GuideReviews';
-import EditProfile from './pages/EditProfile'; // New
+import HomePage            from './pages/HomePage';
+import Login               from './pages/Login';
+import Registration        from './pages/Registration';
+import Dashboard           from './pages/Dashboard';
+import Alerts              from './pages/Alerts';
+import MyBookings          from './pages/MyBookings';
+import GroupTours          from './pages/GroupTours';
+import Discover            from './pages/Discover';
+import Guides              from './pages/Guides';
+import TravelerEditProfile from './pages/TravelerEditProfile';
+import GuideDashboard      from './pages/GuideDashboard';
+import GuideReviews        from './pages/GuideReviews';
+import EditProfile         from './pages/EditProfile';
 
 function App() {
   return (
@@ -28,27 +22,25 @@ function App() {
       <Navbar />
       <main>
         <Routes>
-          <Route path="/group-tours" element={<GroupTours />} />
-          {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/"         element={<HomePage />} />
+          <Route path="/login"    element={<Login />} />
           <Route path="/register" element={<Registration />} />
-          
-          {/* General Protected Routes */}
+          <Route path="/group-tours" element={<GroupTours />} />
+
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
-          <Route path="/bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
+          <Route path="/alerts"    element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
+          <Route path="/bookings"  element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
+          <Route path="/discover"  element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+          <Route path="/guides"    element={<ProtectedRoute><Guides /></ProtectedRoute>} />
 
-          {/* Traveler Specific Routes */}
-          <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
-          <Route path="/guides" element={<ProtectedRoute><Guides /></ProtectedRoute>} />
-          
-          {/* Guide Specific Routes */}
+          {/* Traveler */}
+          <Route path="/edit-traveler-profile" element={<ProtectedRoute><TravelerEditProfile /></ProtectedRoute>} />
+
+          {/* Guide */}
           <Route path="/guide-dashboard" element={<ProtectedRoute><GuideDashboard /></ProtectedRoute>} />
-          <Route path="/guide-reviews" element={<ProtectedRoute><GuideReviews /></ProtectedRoute>} />
-          <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+          <Route path="/guide-reviews"   element={<ProtectedRoute><GuideReviews /></ProtectedRoute>} />
+          <Route path="/edit-profile"    element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
 
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>

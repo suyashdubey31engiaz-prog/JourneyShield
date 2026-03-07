@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/tours/'; // Ensure this matches your backend port
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/tours/';
 
 export const getTours = async () => {
   const response = await axios.get(API_URL);
@@ -21,11 +21,7 @@ export const joinTour = async (tourId, token) => {
 
 export const kickTraveler = async (tourId, travelerId, reason, token) => {
   const config = { headers: { Authorization: `Bearer ${token}` } };
-  const response = await axios.post(
-    `${API_URL}${tourId}/kick`, 
-    { travelerId, reason }, 
-    config
-  );
+  const response = await axios.post(`${API_URL}${tourId}/kick`, { travelerId, reason }, config);
   return response.data;
 };
 

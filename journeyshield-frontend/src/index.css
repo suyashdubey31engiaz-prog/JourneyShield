@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 body {
   background-color: #111827;
   font-family: 'Poppins', sans-serif;
@@ -19,9 +21,41 @@ body {
   box-shadow: none !important;
 }
 
-/* Add this to the bottom of src/index.css to remove the focus outline */
+/* Remove focus outline */
 a:focus,
 button:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+/* FadeIn animation - used in GuideDashboard and Registration */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
+/* Slide down for mobile nav */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.25s ease-out forwards;
+}
+
+/* Subtle pulse for loading skeletons */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1f2937 25%, #374151 50%, #1f2937 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite;
 }
