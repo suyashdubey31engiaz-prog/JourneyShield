@@ -1,19 +1,19 @@
 import axios from 'axios';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/reviews/';
+const BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/reviews';
 
-
-const getAuth = () => {
-  const user = JSON.parse(sessionStorage.getItem('user'));
-  return { headers: { Authorization: `Bearer ${user?.token}` } };
+const auth = () => {
+  const u = JSON.parse(sessionStorage.getItem('user'));
+  return u?.token ? { headers: { Authorization: `Bearer ${u.token}` } } : {};
 };
 
-const createReview = (reviewData) => {
-  return axios.post(API_URL, reviewData, getAuth());
-};
+// Submit or update a review (tied to a specific booking)
+const createReview  = (data)     => axios.post(`${BASE}/`,               data, auth());
 
-const getReviews = (guideId) => {
-  return axios.get(API_URL + guideId);
-};
+// All public reviews for a guide
+const getReviews    = (guideId)  => axios.get(`${BASE}/${guideId}`);
 
-export default { createReview, getReviews };
+// Traveler's own review for a guide (pre-fill edit modal)
+const getMyReview   = (guideId)  => axios.get(`${BASE}/${guideId}/my`,   auth());
+
+export default { createReview, getReviews, getMyReview };

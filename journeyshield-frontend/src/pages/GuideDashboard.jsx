@@ -2,316 +2,377 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createTour, getTours, kickTraveler, cancelTour } from '../services/tourService';
 
-/* ---------- ICONS ---------- */
-const DiscoverIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-const SafetyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z" />
-  </svg>
-);
-const ManagementIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
-  </svg>
-);
-const EditProfileIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-full h-full">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-  </svg>
+/* ─── Quick Stats ─────────────────────────────────────────────────────────── */
+const Stat = ({ label, value }) => (
+  <div className="bg-gray-800/40 border border-gray-700 rounded-xl px-5 py-4 text-center">
+    <p className="text-xl font-bold text-yellow-400">{value}</p>
+    <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+  </div>
 );
 
-/* ---------- CARD COMPONENTS ---------- */
-const FeatureLinkCard = ({ to, icon, title }) => (
-  <Link
-    to={to}
-    className="bg-gray-800/40 p-4 rounded-xl border border-gray-700 text-center flex flex-col items-center justify-center aspect-square hover:border-yellow-400 hover:bg-gray-700/50 transition-all hover:-translate-y-0.5"
-  >
-    <div className="w-10 h-10 mb-2 text-yellow-400">{icon}</div>
-    <span className="font-semibold text-sm text-gray-200">{title}</span>
-  </Link>
-);
+/* ─── Dashboard Card (Link) ───────────────────────────────────────────────── */
+const Card = ({ to, emoji, title, description, accent }) => {
+  const ring = {
+    yellow: 'hover:border-yellow-500/50 hover:shadow-yellow-900/20',
+    cyan:   'hover:border-cyan-500/50   hover:shadow-cyan-900/20',
+    green:  'hover:border-green-500/50  hover:shadow-green-900/20',
+    purple: 'hover:border-purple-500/50 hover:shadow-purple-900/20',
+    amber:  'hover:border-amber-500/50  hover:shadow-amber-900/20',
+    rose:   'hover:border-rose-500/50   hover:shadow-rose-900/20',
+    blue:   'hover:border-blue-500/50   hover:shadow-blue-900/20',
+  };
+  const icon = {
+    yellow: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
+    cyan:   'bg-cyan-500/10   border-cyan-500/20   text-cyan-400',
+    green:  'bg-green-500/10  border-green-500/20  text-green-400',
+    purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
+    amber:  'bg-amber-500/10  border-amber-500/20  text-amber-400',
+    rose:   'bg-rose-500/10   border-rose-500/20   text-rose-400',
+    blue:   'bg-blue-500/10   border-blue-500/20   text-blue-400',
+  };
+  return (
+    <Link to={to}
+      className={`group bg-gray-800/50 p-5 rounded-2xl border border-gray-700 flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 ${ring[accent]}`}>
+      <div className={`w-12 h-12 mb-3 rounded-xl border flex items-center justify-center text-2xl group-hover:scale-110 transition-transform ${icon[accent]}`}>
+        {emoji}
+      </div>
+      <span className="font-bold text-gray-100 text-sm mb-1">{title}</span>
+      <span className="text-xs text-gray-400 leading-relaxed">{description}</span>
+    </Link>
+  );
+};
 
-const ActionCard = ({ onClick, icon, title }) => (
-  <button
-    onClick={onClick}
-    className="bg-gray-800/40 p-4 rounded-xl border border-gray-700 text-center flex flex-col items-center justify-center aspect-square hover:border-yellow-400 hover:bg-gray-700/50 transition-all hover:-translate-y-0.5 w-full h-full"
-  >
-    <div className="w-10 h-10 mb-2 text-yellow-400">{icon}</div>
-    <span className="font-semibold text-sm text-gray-200">{title}</span>
-  </button>
-);
+/* ─── Dashboard Card (Button) ─────────────────────────────────────────────── */
+const ActionCard = ({ onClick, emoji, title, description, accent }) => {
+  const ring = {
+    amber: 'hover:border-amber-500/50 hover:shadow-amber-900/20',
+    blue:  'hover:border-blue-500/50  hover:shadow-blue-900/20',
+  };
+  const icon = {
+    amber: 'bg-amber-500/10 border-amber-500/20 text-amber-400',
+    blue:  'bg-blue-500/10  border-blue-500/20  text-blue-400',
+  };
+  return (
+    <button onClick={onClick}
+      className={`group bg-gray-800/50 p-5 rounded-2xl border border-gray-700 flex flex-col items-center text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 w-full ${ring[accent]}`}>
+      <div className={`w-12 h-12 mb-3 rounded-xl border flex items-center justify-center text-2xl group-hover:scale-110 transition-transform ${icon[accent]}`}>
+        {emoji}
+      </div>
+      <span className="font-bold text-gray-100 text-sm mb-1">{title}</span>
+      <span className="text-xs text-gray-400 leading-relaxed">{description}</span>
+    </button>
+  );
+};
 
-/* ---------- MAIN COMPONENT ---------- */
-const GuideDashboard = () => {
-  const [user, setUser] = useState(null);
-  const [activeView, setActiveView] = useState('menu');
-  const [myTours, setMyTours] = useState([]);
-  const [formData, setFormData] = useState({
-    title: '', description: '', location: '', fixedDate: '', maxParticipants: 10, pricePerPerson: 50,
+/* ─── Tour Management Panel ───────────────────────────────────────────────── */
+const TourManagement = ({ user, onBack }) => {
+  const [myTours, setMyTours]     = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [formData, setFormData]   = useState({
+    title: '', description: '', location: '',
+    fixedDate: '', maxParticipants: 10, pricePerPerson: 50,
   });
-  const [loadingTour, setLoadingTour] = useState(false);
   const [kickModal, setKickModal] = useState({
     isOpen: false, tourId: null, travelerId: null, travelerName: '', reason: '',
   });
 
-  useEffect(() => {
-    const loggedInUser = JSON.parse(sessionStorage.getItem('user'));
-    setUser(loggedInUser);
-    if (loggedInUser?.role === 'Guide') fetchMyTours(loggedInUser._id);
-  }, []);
+  useEffect(() => { fetchTours(); }, []);
 
-  const fetchMyTours = async (guideId) => {
+  const fetchTours = async () => {
     try {
-      const allTours = await getTours();
-      setMyTours(allTours.filter((t) => t.guide?._id === guideId));
-    } catch (error) {
-      console.error('Error fetching my tours', error);
-    }
+      const all = await getTours();
+      setMyTours(all.filter((t) => t.guide?._id === user._id));
+    } catch (e) { console.error(e); }
   };
 
-  const handleTourSubmit = async (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    setLoadingTour(true);
+    setLoading(true);
     try {
       await createTour(formData, user.token);
-      alert('✅ Group Tour successfully created!');
       setFormData({ title: '', description: '', location: '', fixedDate: '', maxParticipants: 10, pricePerPerson: 50 });
-      fetchMyTours(user._id);
-    } catch {
-      alert('❌ Failed to create tour.');
-    } finally {
-      setLoadingTour(false);
+      fetchTours();
+    } catch { alert('❌ Failed to create tour.'); }
+    finally { setLoading(false); }
+  };
+
+  const handleCancel = async (id) => {
+    if (window.confirm('Cancel and delete this tour?')) {
+      try { await cancelTour(id, user.token); fetchTours(); }
+      catch { alert('Failed to cancel tour.'); }
     }
   };
 
-  const handleCancelTour = async (tourId) => {
-    if (window.confirm('Are you sure you want to cancel and delete this tour?')) {
-      try {
-        await cancelTour(tourId, user.token);
-        fetchMyTours(user._id);
-      } catch {
-        alert('Failed to cancel tour.');
-      }
-    }
-  };
-
-  const handleConfirmKick = async () => {
+  const handleKick = async () => {
     if (!kickModal.reason.trim()) return alert('Please provide a reason.');
     try {
       await kickTraveler(kickModal.tourId, kickModal.travelerId, kickModal.reason, user.token);
       setKickModal({ isOpen: false, tourId: null, travelerId: null, travelerName: '', reason: '' });
-      fetchMyTours(user._id);
-    } catch {
-      alert('Failed to remove traveler.');
-    }
+      fetchTours();
+    } catch { alert('Failed to remove traveler.'); }
   };
 
-  if (!user || user.role !== 'Guide') {
-    return <div className="text-center py-20 text-red-500 font-bold text-xl">Access Denied</div>;
-  }
+  const input = 'w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none focus:border-yellow-500 transition-all text-sm';
 
   return (
-    <div className="container mx-auto p-6 text-white min-h-screen">
+    <div className="animate-fadeIn">
+      <button onClick={onBack}
+        className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white text-sm font-medium transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Dashboard
+      </button>
 
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-2xl font-bold text-yellow-400 mx-auto mb-3">
-          {user?.name?.charAt(0).toUpperCase()}
-        </div>
-        <h1 className="text-4xl font-bold">
-          Welcome, <span className="text-yellow-400">{user?.name}</span>
-        </h1>
-        <p className="text-lg text-gray-400 mt-2">Manage your tours and guide your travelers safely.</p>
-      </div>
+      <div className="grid lg:grid-cols-3 gap-8">
 
-      {/* Dashboard Menu View */}
-      {activeView === 'menu' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto animate-fadeIn">
-          <ActionCard onClick={() => setActiveView('management')} icon={<ManagementIcon />} title="Tour Management" />
-          <FeatureLinkCard to="/discover" icon={<DiscoverIcon />} title="Discover Places" />
-          <FeatureLinkCard to="/alerts" icon={<SafetyIcon />} title="Safety Alerts" />
-          {/* FIX: EditProfile page now linked here */}
-          <FeatureLinkCard to="/edit-profile" icon={<EditProfileIcon />} title="Edit Profile" />
-        </div>
-      ) : (
-
-        /* Tour Management View */
-        <div className="max-w-6xl mx-auto animate-fadeIn">
-          <button
-            onClick={() => setActiveView('menu')}
-            className="mb-8 flex items-center gap-2 text-yellow-500 hover:text-yellow-400 font-bold transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Dashboard Menu
-          </button>
-
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Create Tour Form */}
-            <div className="lg:col-span-1 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg h-fit">
-              <h3 className="text-xl font-bold text-yellow-400 mb-6">Host New Tour</h3>
-              <form onSubmit={handleTourSubmit} className="space-y-4">
-                <input
-                  type="text" placeholder="Tour Title" required value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500 transition-colors"
-                />
-                <textarea
-                  placeholder="Description" required rows="2" value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500 transition-colors resize-none"
-                />
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text" placeholder="Location" required value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500 transition-colors"
-                  />
-                  <input
-                    type="date" required value={formData.fixedDate}
-                    onChange={(e) => setFormData({ ...formData, fixedDate: e.target.value })}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white [color-scheme:dark] outline-none focus:border-yellow-500 transition-colors"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Max Guests</label>
-                    <input
-                      type="number" min="2" required value={formData.maxParticipants}
-                      onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500 transition-colors"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-400 mb-1 block">Price ($)</label>
-                    <input
-                      type="number" min="0" required value={formData.pricePerPerson}
-                      onChange={(e) => setFormData({ ...formData, pricePerPerson: e.target.value })}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white outline-none focus:border-yellow-500 transition-colors"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit" disabled={loadingTour}
-                  className="w-full mt-2 bg-yellow-500 text-black font-bold py-3 rounded-xl hover:bg-yellow-400 transition-colors shadow-lg disabled:opacity-60"
-                >
-                  {loadingTour ? 'Publishing...' : '🚀 Publish Tour'}
-                </button>
-              </form>
+        {/* Create Form */}
+        <div className="lg:col-span-1 bg-gray-800/60 border border-gray-700 rounded-2xl p-6 h-fit shadow-lg">
+          <h3 className="text-lg font-bold text-yellow-400 mb-6 flex items-center gap-2">
+            <span className="text-xl">🗓️</span> Host New Tour
+          </h3>
+          <form onSubmit={handleCreate} className="space-y-3">
+            <input className={input} type="text" placeholder="Tour Title" required
+              value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+            <textarea className={`${input} resize-none`} placeholder="Description" required rows="3"
+              value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <input className={input} type="text" placeholder="Location" required
+                value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+              <input className={`${input} [color-scheme:dark]`} type="date" required
+                value={formData.fixedDate} onChange={(e) => setFormData({ ...formData, fixedDate: e.target.value })} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">👥</span>
+                <input className={`${input} pl-8`} type="number" placeholder="Max guests" min="2" required
+                  value={formData.maxParticipants} onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })} />
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">$</span>
+                <input className={`${input} pl-7`} type="number" placeholder="Price" min="0" required
+                  value={formData.pricePerPerson} onChange={(e) => setFormData({ ...formData, pricePerPerson: e.target.value })} />
+              </div>
+            </div>
+            <button type="submit" disabled={loading}
+              className="w-full mt-2 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-60 text-black font-bold py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+              {loading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Publishing…
+                </>
+              ) : '🚀 Publish Tour'}
+            </button>
+          </form>
+        </div>
 
-            {/* My Tours List */}
-            <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-xl font-bold text-white">Active Hosted Tours ({myTours.length})</h3>
+        {/* My Tours List */}
+        <div className="lg:col-span-2 space-y-5">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest border-l-4 border-yellow-500 pl-3">
+            My Hosted Tours ({myTours.length})
+          </h3>
 
-              {myTours.length === 0 && (
-                <div className="bg-gray-800 p-10 rounded-2xl border border-gray-700 text-center">
-                  <p className="text-4xl mb-3">🗺️</p>
-                  <p className="text-gray-400 text-lg">You haven't hosted any tours yet.</p>
-                  <p className="text-gray-500 text-sm mt-1">Use the form to create your first tour.</p>
-                </div>
-              )}
-
-              {myTours.map((tour) => (
-                <div key={tour._id} className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-md">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="text-xl font-bold text-yellow-400">{tour.title}</h4>
-                      <p className="text-sm text-gray-400 mt-1">
-                        📅 {new Date(tour.fixedDate).toLocaleDateString()} &nbsp;|&nbsp; 📍 {tour.location}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={`px-4 py-1 text-xs font-bold rounded-full border ${
-                        tour.travelers.length >= tour.maxParticipants
-                          ? 'bg-red-900/50 text-red-400 border-red-800'
-                          : 'bg-green-900/50 text-green-400 border-green-800'
-                      }`}>
-                        {tour.travelers.length}/{tour.maxParticipants} joined
-                      </span>
-                      <button
-                        onClick={() => handleCancelTour(tour._id)}
-                        className="text-xs text-red-400 hover:text-red-300 underline"
-                      >
-                        Cancel Tour
-                      </button>
-                    </div>
+          {myTours.length === 0 ? (
+            <div className="bg-gray-800/40 border border-gray-700 rounded-2xl p-12 text-center">
+              <p className="text-4xl mb-3">🗺️</p>
+              <p className="text-gray-300 font-semibold mb-1">No tours hosted yet</p>
+              <p className="text-gray-500 text-sm">Fill out the form to publish your first group tour.</p>
+            </div>
+          ) : (
+            myTours.map((tour) => (
+              <div key={tour._id} className="bg-gray-800/60 border border-gray-700 rounded-2xl overflow-hidden hover:border-gray-600 transition-all shadow-md">
+                {/* Tour Header */}
+                <div className="px-6 py-4 border-b border-gray-700 flex justify-between items-start">
+                  <div>
+                    <h4 className="text-lg font-bold text-yellow-400">{tour.title}</h4>
+                    <p className="text-gray-400 text-xs mt-0.5">
+                      📅 {new Date(tour.fixedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      &nbsp;·&nbsp; 📍 {tour.location}
+                    </p>
                   </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`px-3 py-1 text-xs font-bold rounded-full border ${
+                      tour.status === 'Full'
+                        ? 'bg-red-900/40 text-red-400 border-red-800'
+                        : tour.status === 'Completed'
+                        ? 'bg-green-900/40 text-green-400 border-green-800'
+                        : 'bg-blue-900/40 text-blue-400 border-blue-800'
+                    }`}>
+                      {tour.status} · {tour.travelers.length}/{tour.maxParticipants}
+                    </span>
+                    <button onClick={() => handleCancel(tour._id)}
+                      className="text-xs text-red-400 hover:text-red-300 underline transition-colors">
+                      Cancel Tour
+                    </button>
+                  </div>
+                </div>
 
-                  <div className="bg-gray-900 rounded-xl p-4 border border-gray-700">
-                    <p className="text-xs text-gray-400 mb-3 font-semibold uppercase tracking-wider">Joined Travelers</p>
-                    {tour.travelers.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">No travelers have joined yet.</p>
-                    )}
-                    {tour.travelers.map((t) => (
-                      <div
-                        key={t._id}
-                        className="flex justify-between items-center bg-gray-800 px-4 py-2.5 rounded-lg mb-2 border border-gray-700"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-cyan-700 flex items-center justify-center text-xs font-bold text-white">
-                            {t.name?.charAt(0).toUpperCase()}
+                {/* Capacity Bar */}
+                <div className="px-6 py-3 border-b border-gray-700/50">
+                  <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                    <span>Capacity</span>
+                    <span>{tour.travelers.length} / {tour.maxParticipants} spots filled</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-yellow-500 rounded-full transition-all"
+                      style={{ width: `${(tour.travelers.length / tour.maxParticipants) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Traveler List */}
+                <div className="px-6 py-4">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                    👥 Joined Travelers
+                  </p>
+                  {tour.travelers.length > 0 ? (
+                    <div className="space-y-2">
+                      {tour.travelers.map((t) => (
+                        <div key={t._id}
+                          className="flex justify-between items-center bg-gray-900/60 border border-gray-700 px-4 py-2.5 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-full bg-cyan-800 flex items-center justify-center text-xs font-bold text-white">
+                              {t.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-sm text-white font-medium">{t.name}</span>
                           </div>
-                          <span className="text-sm text-white font-medium">{t.name}</span>
+                          <button
+                            onClick={() => setKickModal({ isOpen: true, tourId: tour._id, travelerId: t._id, travelerName: t.name, reason: '' })}
+                            className="text-xs bg-red-900/40 border border-red-800/60 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1 rounded-lg transition-all">
+                            Remove
+                          </button>
                         </div>
-                        <button
-                          onClick={() => setKickModal({
-                            isOpen: true, tourId: tour._id, travelerId: t._id,
-                            travelerName: t.name, reason: '',
-                          })}
-                          className="text-xs bg-red-900/50 border border-red-800 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1 rounded-md transition-colors"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">No travelers have joined yet.</p>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
 
       {/* Kick Modal */}
       {kickModal.isOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4">
           <div className="bg-gray-800 p-8 rounded-2xl w-full max-w-md border border-gray-700 shadow-2xl animate-fadeIn">
-            <h3 className="text-2xl font-bold text-red-400 mb-3">Remove Traveler</h3>
+            <h3 className="text-xl font-bold text-red-400 mb-2">Remove Traveler</h3>
             <p className="text-sm text-gray-300 mb-6">
-              You are permanently removing{' '}
-              <span className="text-white font-bold">{kickModal.travelerName}</span> from this tour.
+              You are removing <span className="text-white font-bold">{kickModal.travelerName}</span> from this tour. They will not be able to rejoin.
             </p>
-            <label className="block text-sm text-gray-400 mb-2 font-medium">Reason for removal:</label>
+            <label className="block text-sm font-bold text-gray-300 mb-2">Reason for removal</label>
             <textarea
-              placeholder="e.g., Unsafe behavior, no-show, etc."
+              rows="3"
+              placeholder="e.g. Unsafe behavior, No-show, Code of conduct violation..."
               value={kickModal.reason}
               onChange={(e) => setKickModal({ ...kickModal, reason: e.target.value })}
-              className="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white mb-6 outline-none focus:border-red-500 min-h-[100px] resize-none"
+              className="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white outline-none focus:border-red-500 resize-none text-sm mb-6"
             />
-            <div className="flex justify-end gap-3">
+            <div className="flex gap-3">
               <button
                 onClick={() => setKickModal({ isOpen: false, tourId: null, travelerId: null, travelerName: '', reason: '' })}
-                className="px-6 py-3 text-sm font-bold text-gray-300 bg-gray-700 rounded-xl hover:bg-gray-600 transition-colors"
-              >
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-xl transition-colors">
                 Cancel
               </button>
-              <button
-                onClick={handleConfirmKick}
-                className="px-6 py-3 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-500 transition-colors shadow-lg"
-              >
+              <button onClick={handleKick}
+                className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg">
                 Confirm Removal
               </button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+/* ─── Main Guide Dashboard ────────────────────────────────────────────────── */
+const GuideDashboard = () => {
+  const [user, setUser]           = useState(null);
+  const [view, setView]           = useState('menu'); // 'menu' | 'tours'
+  const [tourCount, setTourCount] = useState(0);
+
+  useEffect(() => {
+    const u = JSON.parse(sessionStorage.getItem('user'));
+    setUser(u);
+    if (u?.role === 'Guide') {
+      getTours()
+        .then((all) => setTourCount(all.filter((t) => t.guide?._id === u._id && t.status !== 'Cancelled').length))
+        .catch(() => {});
+    }
+  }, []);
+
+  if (!user || user.role !== 'Guide') {
+    return (
+      <div className="text-center py-20 text-red-500 font-bold text-xl">
+        🚫 Access Denied
+      </div>
+    );
+  }
+
+  const cards = [
+    { emoji: '🗺️', title: 'Discover Places',   description: 'Plan safe routes for your clients',   accent: 'yellow', to: '/discover' },
+    { emoji: '⭐', title: 'My Reviews',          description: 'See what travelers say about you',    accent: 'purple', to: '/guide-reviews' },
+    { emoji: '🛡️', title: 'Safety Alerts',      description: 'Real-time area safety data',          accent: 'green',  to: '/alerts' },
+    { emoji: '📅', title: 'Booking Requests',    description: 'Accept & complete bookings',          accent: 'cyan',   to: '/bookings' },
+    { emoji: '✏️', title: 'Edit Profile',        description: 'Update your guide profile',           accent: 'rose',   to: '/edit-profile' },
+  ];
+
+  if (view === 'tours') {
+    return (
+      <div className="container mx-auto px-6 py-10 text-white max-w-5xl">
+        <TourManagement user={user} onBack={() => setView('menu')} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-6 py-10 text-white max-w-5xl animate-fadeIn">
+
+      {/* ── Header ── */}
+      <div className="mb-10 flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-2xl font-extrabold text-yellow-400">
+          {user.name?.charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <h1 className="text-3xl font-extrabold text-white">
+            Welcome back, <span className="text-yellow-400">{user.name?.split(' ')[0]}</span> 👋
+          </h1>
+          <p className="text-gray-400 text-sm mt-0.5">Guide · {user.email}</p>
+        </div>
+      </div>
+
+      {/* ── Quick Stats ── */}
+      <div className="grid grid-cols-3 gap-4 mb-10">
+        <Stat label="Account Type"  value="Guide" />
+        <Stat label="Active Tours"  value={tourCount > 0 ? tourCount : '—'} />
+        <Stat label="Status"        value="Active ✅" />
+      </div>
+
+      {/* ── Quick Actions ── */}
+      <div>
+        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+
+          {/* Tour Management — opens inline panel */}
+          <ActionCard
+            onClick={() => setView('tours')}
+            emoji="🗓️"
+            title="Tour Management"
+            description="Create & manage your group tours"
+            accent="amber"
+          />
+
+          {/* Standard link cards */}
+          {cards.map((c) => <Card key={c.to} {...c} />)}
+        </div>
+      </div>
     </div>
   );
 };

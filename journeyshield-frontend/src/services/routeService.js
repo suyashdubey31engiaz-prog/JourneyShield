@@ -1,12 +1,7 @@
-import axios from 'axios';
+// routeService.js — delegates to searchService (same backend endpoint)
+import searchService from './searchService';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/search';
-
-const getRoute = async (startLat, startLon, endLat, endLon) => {
-  const response = await axios.get(`${API_URL}/route`, {
-    params: { startLat, startLon, endLat, endLon },
-  });
-  return { data: response.data };
-};
+const getRoute = (startLat, startLon, endLat, endLon) =>
+  searchService.getRoute(startLat, startLon, endLat, endLon);
 
 export default { getRoute };

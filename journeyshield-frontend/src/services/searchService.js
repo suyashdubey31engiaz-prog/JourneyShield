@@ -1,23 +1,38 @@
 import axios from 'axios';
 
-// Keeps your environment variable setup
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/search';
+const BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api/search';
 
-const searchPlaces = async (query) => {
-  const user = JSON.parse(sessionStorage.getItem('user'));
-  
-  // Attaches the token if the user is logged in
-  const config = {
-    headers: user && user.token ? { Authorization: `Bearer ${user.token}` } : {},
-    params: { query }
-  };
-  
-  // CRITICAL FIX: We added '/places' to the URL so it actually reaches the backend!
-  return await axios.get(`${API_URL}/places`, config);
+const auth = () => {
+  const u = JSON.parse(sessionStorage.getItem('user'));
+  return u?.token ? { headers: { Authorization: `Bearer ${u.token}` } } : {};
 };
 
-const searchService = {
-  searchPlaces,
-};
+/**
+ * Geocode a place name → { lat, lon, displayName, city, boundingBox }
+ */
+const geocodeLocation = (q) =>
+  axios.get(`${BASE}/geocode`, { params: { q }, ...auth() });
 
+/**
+ * Nearby POI search
+ * @param {number}  lat
+ * @param {number}  lon
+ * @param {object}  options - { radius, query, category }
+ */
+const searchNearbyPlaces = (lat, lon, options = {}) =>
+  axios.get(`${BASE}/places`, {
+    params: { lat, lon, ...options },
+    ...auth(),
+  });
+
+/**
+ * Route between two points → [[lat,lon], ...]
+ */
+const getRoute = (startLat, startLon, endLat, endLon) =>
+  axios.get(`${BASE}/route`, {
+    params: { startLat, startLon, endLat, endLon },
+    ...auth(),
+  });
+
+const searchService = { geocodeLocation, searchNearbyPlaces, getRoute };
 export default searchService;
