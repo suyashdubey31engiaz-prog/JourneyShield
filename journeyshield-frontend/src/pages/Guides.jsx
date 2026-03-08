@@ -43,7 +43,12 @@ const GuideCard = ({ guide, onHire, onView }) => {
       <div className="h-1.5 bg-gradient-to-r from-yellow-500 to-amber-400" />
       <div className="p-5 flex flex-col flex-grow">
         <div className="flex items-start gap-4 mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-600 to-cyan-900 flex items-center justify-center text-xl font-extrabold text-white border border-cyan-700/50 shrink-0">{initials}</div>
+          <div className="w-14 h-14 rounded-2xl overflow-hidden border border-cyan-700/50 shrink-0 bg-gradient-to-br from-cyan-600 to-cyan-900">
+            {guide.avatar
+              ? <img src={guide.avatar} alt={guide.name} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-xl font-extrabold text-white">{initials}</div>
+            }
+          </div>
           <div className="min-w-0 flex-grow">
             <h3 className="text-white font-extrabold text-base leading-tight">{guide.name}</h3>
             {loc && <p className="text-yellow-400 text-xs font-semibold mt-0.5">📍 {loc}</p>}
@@ -145,8 +150,13 @@ const ProfileDrawer = ({ guide, onClose, onHire }) => {
         <div className="shrink-0 border-b border-gray-700">
           <div className="px-6 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-900 flex items-center justify-center text-sm font-extrabold text-white">
-                {guide.name?.substring(0,2).toUpperCase() || '??'}
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-cyan-600 to-cyan-900 shrink-0">
+                {guide.avatar
+                  ? <img src={guide.avatar} alt={guide.name} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-sm font-extrabold text-white">
+                      {guide.name?.substring(0,2).toUpperCase() || '??'}
+                    </div>
+                }
               </div>
               <div>
                 <h2 className="text-base font-extrabold text-white leading-tight">{guide.name}</h2>
@@ -352,8 +362,13 @@ const BookingModal = ({ guide, user, onClose }) => {
 
             {/* Guide mini-card */}
             <div className="flex items-center gap-3 bg-gray-800/60 border border-gray-700 rounded-xl p-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-900 flex items-center justify-center text-sm font-extrabold text-white shrink-0">
-                {guide.name?.substring(0,2).toUpperCase()}
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-cyan-600 to-cyan-900 shrink-0">
+                {guide.avatar
+                  ? <img src={guide.avatar} alt={guide.name} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-sm font-extrabold text-white">
+                      {guide.name?.substring(0,2).toUpperCase()}
+                    </div>
+                }
               </div>
               <div>
                 <p className="text-white font-bold text-sm">{guide.name}</p>
