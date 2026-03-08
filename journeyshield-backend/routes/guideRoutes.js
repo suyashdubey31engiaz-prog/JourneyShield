@@ -4,8 +4,8 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.route('/').get(protect, getGuides);
-router.route('/me').get(protect, getMyGuideProfile);     // Get my profile
-router.route('/profile').put(protect, updateGuideProfile); // Update my profile
+router.get('/',        protect, getGuides);
+router.get('/me',      protect, getMyGuideProfile);
+router.put('/profile', protect, updateGuideProfile);
 
 export default router;

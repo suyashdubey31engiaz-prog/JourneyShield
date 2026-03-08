@@ -1,85 +1,56 @@
 import Guide from '../models/guideModel.js';
+import User  from '../models/userModel.js';
 
-// @desc    Fetch all guides with extended profile
-// @route   GET /api/guides
-// @access  Protected
-const getGuides = async (req, res) => {
+// ── GET own guide profile (full) ─────────────────────────────────────────────
+export const getMyGuideProfile = async (req, res) => {
   try {
-    const guides = await Guide.find({}).populate('user', 'name email');
-    res.json(guides);
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    let guide = await Guide.findOne({ user: req.user._id });
+    if (!guide) guide = await Guide.create({ user: req.user._id, bio: '', location: '' });
+    const user = await User.findById(req.user._id).select('name email avatar');
+    res.json({ ...guide.toObject(), userName: user?.name, userEmail: user?.email, userAvatar: user?.avatar || '' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// @desc    Get current guide's full profile
-// @route   GET /api/guides/me
-// @access  Private (Guide)
-const getMyGuideProfile = async (req, res) => {
-  try {
-    const guide = await Guide.findOne({ user: req.user._id }).populate('user', 'name email');
-    if (guide) {
-      res.json(guide);
-    } else {
-      res.status(404).json({ message: 'Guide profile not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
-
-// @desc    Update guide profile (all fields)
-// @route   PUT /api/guides/profile
-// @access  Private (Guide)
-const updateGuideProfile = async (req, res) => {
+// ── UPDATE own guide profile (all fields) ────────────────────────────────────
+export const updateGuideProfile = async (req, res) => {
   const {
-    location,
-    bio,
-    experience,
-    languages,
-    specialties,
-    phone,
-    availability,
-    pricePerHour,
-    certifications,
-    socialLinks,
+    bio, location, experience, languages, specialties,
+    phone, availability, pricePerHour, certifications, socialLinks, avatar,
   } = req.body;
 
   try {
-    const guide = await Guide.findOne({ user: req.user._id });
+    let guide = await Guide.findOne({ user: req.user._id });
+    if (!guide) guide = await Guide.create({ user: req.user._id, bio: '', location: '' });
 
-    if (!guide) {
-      return res.status(404).json({ message: 'Guide profile not found' });
+    if (bio           !== undefined) guide.bio           = bio;
+    if (location      !== undefined) guide.location      = location;
+    if (experience    !== undefined) guide.experience    = experience;
+    if (languages     !== undefined) guide.languages     = languages;
+    if (specialties   !== undefined) guide.specialties   = specialties;
+    if (phone         !== undefined) guide.phone         = phone;
+    if (availability  !== undefined) guide.availability  = availability;
+    if (pricePerHour  !== undefined) guide.pricePerHour  = pricePerHour;
+    if (certifications!== undefined) guide.certifications= certifications;
+    if (avatar        !== undefined) guide.avatar        = avatar;  // Cloudinary URL
+    if (socialLinks   !== undefined) {
+      guide.socialLinks = { ...guide.socialLinks.toObject(), ...socialLinks };
     }
 
-    // Update only the fields that were actually sent
-    if (location    !== undefined) guide.location     = location;
-    if (bio         !== undefined) guide.bio          = bio;
-    if (experience  !== undefined) guide.experience   = experience;
-    if (phone       !== undefined) guide.phone        = phone;
-    if (availability!== undefined) guide.availability = availability;
-    if (pricePerHour!== undefined) guide.pricePerHour = Number(pricePerHour) || 0;
-    if (certifications !== undefined) guide.certifications = certifications;
-
-    // Arrays — replace entirely if provided
-    if (Array.isArray(languages))  guide.languages  = languages;
-    if (Array.isArray(specialties)) guide.specialties = specialties;
-
-    // Nested object — merge individual sub-fields
-    if (socialLinks) {
-      guide.socialLinks = {
-        instagram: socialLinks.instagram ?? guide.socialLinks?.instagram ?? '',
-        facebook:  socialLinks.facebook  ?? guide.socialLinks?.facebook  ?? '',
-        website:   socialLinks.website   ?? guide.socialLinks?.website   ?? '',
-      };
-    }
-
-    const updatedGuide = await guide.save();
-    res.json(updatedGuide);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server Error' });
+    const saved = await guide.save();
+    res.json(saved);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-export { getGuides, getMyGuideProfile, updateGuideProfile };
+// ── List all guides (used by admin/guides page) ───────────────────────────────
+export const getGuides = async (req, res) => {
+  try {
+    const guides = await Guide.find({}).populate('user', 'name email avatar');
+    res.json(guides);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
