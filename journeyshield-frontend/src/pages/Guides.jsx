@@ -1,9 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { createBooking } from '../services/bookingService';
 import reviewService from '../services/reviewService';
+import chatService from '../services/chatService';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+
+// ── Chat Request Button ───────────────────────────────────────────────────────
+// Shown on guide profile drawer — handles all states automatically
+const ChatRequestButton = ({ guideUserId, guideName, onClose }) => {
+  const navigate = useNavigate();
+  const [status,  setStatus]  = useState('loading'); // loading|none|pending|approved|rejected|connected
+  const [convId,  setConvId]  = useState(null);
+  const [sending, setSending] = useState(false);
+  const [msg,     setMsg]     = useState('');
+
+  useEffect(() => {
+    chatService.getRequestStatus(guideUserId)
+      .then(({ data }) => {
+        setStatus(data.status);
+        if (data.conversationId) setConvId(data.conversationId);
+      })
+      .catch(() => setStatus('none'));
+  }, [guideUserId]);
+
+  const handleRequest = async () => {
+    setSending(true);
+    try {
+      await chatService.sendRequest(guideUserId, msg);
+      setStatus('pending');
+      setMsg('');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not send request.');
+    } finally { setSending(false); }
+  };
+
+  if (status === 'loading') return null;
+
+  if (status === 'connected')
+    return (
+      <button onClick={() => { onClose(); navigate(`/chat?conv=${convId}`); }}
+        className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+        💬 Open Chat
+      </button>
+    );
+
+  if (status === 'approved')
+    return (
+      <button onClick={() => { onClose(); navigate('/chat'); }}
+        className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+        💬 Chat with {guideName}
+      </button>
+    );
+
+  if (status === 'pending')
+    return (
+      <div className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-center">
+        <p className="text-yellow-400 text-xs font-bold">⏳ Chat request sent</p>
+        <p className="text-gray-500 text-[11px] mt-0.5">Waiting for {guideName} to approve</p>
+      </div>
+    );
+
+  if (status === 'rejected')
+    return (
+      <button onClick={handleRequest} disabled={sending}
+        className="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-3 rounded-xl text-sm transition-all">
+        🔄 Re-send Chat Request
+      </button>
+    );
+
+  // none — show request form
+  return (
+    <div className="space-y-2">
+      <input type="text" value={msg} onChange={e => setMsg(e.target.value)}
+        placeholder={`Intro message to ${guideName}… (optional)`}
+        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-white text-xs placeholder-gray-500 outline-none focus:border-cyan-500 transition-all" />
+      <button onClick={handleRequest} disabled={sending}
+        className="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60">
+        {sending
+          ? <><svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Sending…</>
+          : '💬 Request Chat'}
+      </button>
+    </div>
+  );
+};
 
 const Stars = ({ rating }) => (
   <div className="flex gap-0.5">
@@ -288,12 +369,13 @@ const ProfileDrawer = ({ guide, onClose, onHire }) => {
           )}
         </div>
 
-        {/* Sticky hire CTA */}
-        <div className="shrink-0 p-4 border-t border-gray-700 bg-gray-900">
+        {/* Sticky CTA buttons */}
+        <div className="shrink-0 p-4 border-t border-gray-700 bg-gray-900 space-y-2">
           <button onClick={() => { onClose(); onHire(guide); }}
-            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-yellow-500/20">
+            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold py-3 rounded-xl text-sm transition-all shadow-lg shadow-yellow-500/20">
             🚀 Hire {guide.name?.split(' ')[0]}
           </button>
+          <ChatRequestButton guideUserId={guide._id} guideName={guide.name?.split(' ')[0]} onClose={onClose} />
         </div>
       </div>
     </div>

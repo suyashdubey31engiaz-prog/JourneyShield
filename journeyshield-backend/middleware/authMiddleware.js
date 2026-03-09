@@ -3,8 +3,6 @@ import User from '../models/userModel.js';
 
 const protect = async (req, res, next) => {
   // 1. Add this console.log to see what header we receive
-  console.log('Authorization Header Received:', req.headers.authorization); 
-  
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

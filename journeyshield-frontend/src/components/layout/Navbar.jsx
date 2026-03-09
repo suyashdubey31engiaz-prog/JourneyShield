@@ -1,15 +1,23 @@
 import React from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import logo from '../../assets/logo.svg';
+import chatService from '../../services/chatService';
 
 const Navbar = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const [user, setUser] = React.useState(null);
+  const [user, setUser]       = useState(null);
+  const [unread, setUnread]   = useState(0);
 
-  // Re-read user from sessionStorage on every navigation (catches avatar/name updates)
   React.useEffect(() => {
-    setUser(JSON.parse(sessionStorage.getItem('user')));
+    const u = JSON.parse(sessionStorage.getItem('user'));
+    setUser(u);
+    if (u?.token) {
+      chatService.getUnreadCount()
+        .then(({ data }) => setUnread(data.count || 0))
+        .catch(() => {});
+    }
   }, [location]);
 
   const handleLogout = () => {
@@ -42,20 +50,29 @@ const Navbar = () => {
 
           {user ? (
             <>
-              <NavLink
-                to={user.role === 'Guide' ? '/guide-dashboard' : '/dashboard'}
-                className={navLink}>
+              <NavLink to={user.role === 'Guide' ? '/guide-dashboard' : '/dashboard'} className={navLink}>
                 Dashboard
               </NavLink>
 
               <NavLink to="/bookings" className={navLink}>My Bookings</NavLink>
 
-              {/* ── Avatar / profile button ── */}
+              {/* Chat with unread badge */}
+              <NavLink to="/chat"
+                className={({ isActive }) =>
+                  `relative px-4 py-2 text-sm font-semibold rounded-md transition-colors ${isActive ? 'bg-gray-800 text-yellow-400' : 'hover:bg-gray-800/50'}`
+                }>
+                💬 Chat
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 text-black text-[10px] font-extrabold rounded-full flex items-center justify-center shadow">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
+              </NavLink>
+
+              {/* Avatar / profile */}
               <NavLink to="/profile"
                 className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all ${
-                    isActive ? 'bg-gray-800 ring-2 ring-yellow-500/50' : 'hover:bg-gray-800/60'
-                  }`
+                  `flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all ${isActive ? 'bg-gray-800 ring-2 ring-yellow-500/50' : 'hover:bg-gray-800/60'}`
                 }>
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-600 shrink-0">
                   {user.avatar
@@ -70,8 +87,7 @@ const Navbar = () => {
                 </span>
               </NavLink>
 
-              <button
-                onClick={handleLogout}
+              <button onClick={handleLogout}
                 className="px-3 py-2 text-sm font-semibold rounded-md bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white transition-all">
                 Logout
               </button>

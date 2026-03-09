@@ -12,7 +12,7 @@ import GroupTours  from './pages/GroupTours';
 import Dashboard   from './pages/Dashboard';
 import Alerts      from './pages/Alerts';
 import MyBookings  from './pages/MyBookings';
-import MyProfile from './pages/Myprofile';                         // NEW: own profile (both roles)
+import MyProfile   from './pages/MyProfile';                         // NEW: own profile (both roles)
 
 // Traveler Pages
 import Discover    from './pages/Discover';
@@ -23,6 +23,7 @@ import TravelerEditProfile from './pages/TravelerEditProfile';       // NEW
 import GuideDashboard from './pages/GuideDashboard';
 import GuideReviews   from './pages/GuideReviews';
 import EditProfile    from './pages/EditProfile';                    // Guide edit profile (updated)
+import Chat         from './pages/Chat';                               // NEW
 import GuideViewTravelerProfile from './pages/Guideviewtravelerprofile'; // NEW
 
 function App() {
@@ -58,6 +59,7 @@ function App() {
                                      element={<ProtectedRoute><GuideReviews /></ProtectedRoute>} />
           <Route path="/edit-profile"
                                      element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+          <Route path="/chat"         element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/traveler/:userId"
                                      element={<ProtectedRoute><GuideViewTravelerProfile /></ProtectedRoute>} />
 
