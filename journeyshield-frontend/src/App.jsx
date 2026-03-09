@@ -12,7 +12,7 @@ import GroupTours  from './pages/GroupTours';
 import Dashboard   from './pages/Dashboard';
 import Alerts      from './pages/Alerts';
 import MyBookings  from './pages/MyBookings';
-import MyProfile   from './pages/MyProfile';                         // NEW: own profile (both roles)
+import MyProfile   from './pages/Myprofile';
 
 // Traveler Pages
 import Discover    from './pages/Discover';
@@ -24,7 +24,7 @@ import GuideDashboard from './pages/GuideDashboard';
 import GuideReviews   from './pages/GuideReviews';
 import EditProfile    from './pages/EditProfile';                    // Guide edit profile (updated)
 import Chat         from './pages/Chat';                               // NEW
-import GuideViewTravelerProfile from './pages/Guideviewtravelerprofile'; // NEW
+import GuideViewTravelerProfile from './pages/Guideviewtravelerprofile';
 
 function App() {
   return (
@@ -72,3 +72,4 @@ function App() {
 }
 
 export default App;
+//--- File: C:\Users\Suyash Dubey\OneDrive\Desktop\SafeJourney\journeyshield-frontend\src\index.css ---
