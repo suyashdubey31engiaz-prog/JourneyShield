@@ -72,4 +72,4 @@ function App() {
 }
 
 export default App;
-//--- File: C:\Users\Suyash Dubey\OneDrive\Desktop\SafeJourney\journeyshield-frontend\src\index.css ---
+// --- File: C:\Users\Suyash Dubey\OneDrive\Desktop\SafeJourney\journeyshield-frontend\src\index.css ---
