@@ -8,18 +8,19 @@ import dns        from 'dns';
 
 dns.setDefaultResultOrder('ipv4first');
 
-// Robust transporter that works on cloud servers (Render, Railway, etc.)
-// Using explicit SMTP config instead of 'service: gmail' which can fail on cloud IPs
+// Gmail SMTP transporter — port 587 + STARTTLS works on most cloud hosts
+// Port 465 (SSL) is often blocked by cloud providers like Render
 const createTransporter = () => nodemailer.createTransport({
   host:   'smtp.gmail.com',
-  port:   465,
-  secure: true, // SSL — more reliable than STARTTLS on cloud servers
+  port:   587,
+  secure: false, // STARTTLS — more widely supported on cloud servers
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false, // prevents TLS cert errors on some cloud hosts
+    rejectUnauthorized: false,
+    ciphers: 'SSLv3',
   },
 });
 
@@ -38,22 +39,22 @@ export const sendRegistrationOTP = async (req, res) => {
     await OTP.create({ email, otp: generatedOtp });
 
     const transporter = createTransporter();
-    // Verify connection before sending so we get a clear error if creds are wrong
-    await transporter.verify().catch(err => {
-      console.error('SMTP verify failed:', err.message);
-      throw new Error('Email service unavailable. Please try again later.');
-    });
+    console.log('[OTP] Attempting to send email to:', email);
+    console.log('[OTP] Using EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
+    console.log('[OTP] Using EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
     await transporter.sendMail({
       from: `"JourneyShield Security" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Your JourneyShield Verification Code',
       html: `<h2>Welcome to JourneyShield!</h2><p>Your verification code is: <b style="font-size:24px">${generatedOtp}</b></p><p>Expires in 5 minutes.</p>`,
     });
+    console.log('[OTP] Email sent successfully to:', email);
     res.status(200).json({ message: 'OTP sent successfully to your email' });
   } catch (err) {
-    console.error('OTP Error full:', err);
+    console.error('[OTP] Send failed — code:', err.code, '| message:', err.message);
     res.status(500).json({ 
-      message: err.message || 'Failed to send OTP email. Please check your email address and try again.'
+      message: 'Failed to send OTP email. Please ensure you entered a valid email address.',
+      debug: process.env.NODE_ENV === 'development' ? err.message : undefined,
     });
   }
 };
