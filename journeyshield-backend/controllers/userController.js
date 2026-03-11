@@ -3,26 +3,11 @@ import Guide from '../models/guideModel.js';
 import OTP   from '../models/otpModel.js';
 import jwt        from 'jsonwebtoken';
 import bcrypt     from 'bcryptjs';
-import nodemailer from 'nodemailer';
-import dns        from 'dns';
+import { Resend } from 'resend';
 
-dns.setDefaultResultOrder('ipv4first');
-
-// Gmail SMTP transporter — port 587 + STARTTLS works on most cloud hosts
-// Port 465 (SSL) is often blocked by cloud providers like Render
-const createTransporter = () => nodemailer.createTransport({
-  host:   'smtp.gmail.com',
-  port:   587,
-  secure: false, // STARTTLS — more widely supported on cloud servers
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-    ciphers: 'SSLv3',
-  },
-});
+// Resend uses HTTPS API — works on ALL cloud hosts including Render free tier
+// Unlike SMTP (Gmail/nodemailer), HTTP-based email APIs are never firewall-blocked
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET || 'your_super_secret_key', { expiresIn: '30d' });
@@ -38,16 +23,29 @@ export const sendRegistrationOTP = async (req, res) => {
     await OTP.findOneAndDelete({ email });
     await OTP.create({ email, otp: generatedOtp });
 
-    const transporter = createTransporter();
     console.log('[OTP] Attempting to send email to:', email);
-    console.log('[OTP] Using EMAIL_USER:', process.env.EMAIL_USER ? 'SET' : 'NOT SET');
-    console.log('[OTP] Using EMAIL_PASS:', process.env.EMAIL_PASS ? 'SET' : 'NOT SET');
-    await transporter.sendMail({
-      from: `"JourneyShield Security" <${process.env.EMAIL_USER}>`,
-      to: email,
+    console.log('[OTP] RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
+
+    const { error: sendError } = await resend.emails.send({
+      from:    'JourneyShield <onboarding@resend.dev>',
+      to:      [email],
       subject: 'Your JourneyShield Verification Code',
-      html: `<h2>Welcome to JourneyShield!</h2><p>Your verification code is: <b style="font-size:24px">${generatedOtp}</b></p><p>Expires in 5 minutes.</p>`,
+      html:    `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1f2937;border-radius:12px;color:#f9fafb">
+          <h2 style="color:#f59e0b;margin-bottom:8px">🛡️ JourneyShield</h2>
+          <p style="color:#9ca3af;margin-bottom:24px">Your verification code is:</p>
+          <div style="background:#111827;border-radius:8px;padding:24px;text-align:center;letter-spacing:12px;font-size:36px;font-weight:bold;color:#f59e0b">
+            ${generatedOtp}
+          </div>
+          <p style="color:#6b7280;font-size:13px;margin-top:24px">This code expires in 5 minutes. Do not share it with anyone.</p>
+        </div>
+      `,
     });
+
+    if (sendError) {
+      console.error('[OTP] Resend error:', sendError);
+      throw new Error(sendError.message || 'Failed to send email');
+    }
     console.log('[OTP] Email sent successfully to:', email);
     res.status(200).json({ message: 'OTP sent successfully to your email' });
   } catch (err) {
