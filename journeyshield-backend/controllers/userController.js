@@ -3,11 +3,19 @@ import Guide from '../models/guideModel.js';
 import OTP   from '../models/otpModel.js';
 import jwt        from 'jsonwebtoken';
 import bcrypt     from 'bcryptjs';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Resend uses HTTPS API — works on ALL cloud hosts including Render free tier
-// Unlike SMTP (Gmail/nodemailer), HTTP-based email APIs are never firewall-blocked
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Brevo SMTP — works on Render free tier (port 587 is allowed for Brevo)
+// Unlike Gmail SMTP, Brevo's relay is whitelisted on all major cloud providers
+const createTransporter = () => nodemailer.createTransport({
+  host:   'smtp-relay.brevo.com',
+  port:   587,
+  secure: false,
+  auth: {
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_PASS,
+  },
+});
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET || 'your_super_secret_key', { expiresIn: '30d' });
@@ -24,11 +32,13 @@ export const sendRegistrationOTP = async (req, res) => {
     await OTP.create({ email, otp: generatedOtp });
 
     console.log('[OTP] Attempting to send email to:', email);
-    console.log('[OTP] RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'SET' : 'NOT SET');
+    console.log('[OTP] BREVO_SMTP_USER:', process.env.BREVO_SMTP_USER ? 'SET' : 'NOT SET');
+    console.log('[OTP] BREVO_SMTP_PASS:', process.env.BREVO_SMTP_PASS ? 'SET' : 'NOT SET');
 
-    const { error: sendError } = await resend.emails.send({
-      from:    'JourneyShield <onboarding@resend.dev>',
-      to:      [email],
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from:    '"JourneyShield" <' + process.env.BREVO_SMTP_USER + '>',
+      to:      email,
       subject: 'Your JourneyShield Verification Code',
       html:    `
         <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1f2937;border-radius:12px;color:#f9fafb">
@@ -41,11 +51,6 @@ export const sendRegistrationOTP = async (req, res) => {
         </div>
       `,
     });
-
-    if (sendError) {
-      console.error('[OTP] Resend error:', sendError);
-      throw new Error(sendError.message || 'Failed to send email');
-    }
     console.log('[OTP] Email sent successfully to:', email);
     res.status(200).json({ message: 'OTP sent successfully to your email' });
   } catch (err) {
