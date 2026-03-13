@@ -3,11 +3,11 @@ import Guide from '../models/guideModel.js';
 import OTP   from '../models/otpModel.js';
 import jwt        from 'jsonwebtoken';
 import bcrypt     from 'bcryptjs';
-import * as Brevo from '@getbrevo/brevo';
+import SibApiV3Sdk from '@getbrevo/brevo';
 
 // Brevo HTTP API — uses port 443 (HTTPS), never blocked on any cloud host
-const brevoClient = new Brevo.TransactionalEmailsApi();
-brevoClient.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+const brevoClient = new SibApiV3Sdk.TransactionalEmailsApi();
+brevoClient.setApiKey(SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET || 'your_super_secret_key', { expiresIn: '30d' });
@@ -26,7 +26,7 @@ export const sendRegistrationOTP = async (req, res) => {
     console.log('[OTP] Attempting to send email to:', email);
     console.log('[OTP] BREVO_API_KEY:', process.env.BREVO_API_KEY ? 'SET' : 'NOT SET');
 
-    const sendSmtpEmail = new Brevo.SendSmtpEmail();
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.subject = 'Your JourneyShield Verification Code';
     sendSmtpEmail.to = [{ email }];
     sendSmtpEmail.sender = { name: 'JourneyShield', email: process.env.BREVO_SMTP_USER || 'noreply@journeyshield.com' };
