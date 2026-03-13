@@ -26,7 +26,7 @@ export const sendRegistrationOTP = async (req, res) => {
     console.log('[OTP] BREVO_API_KEY:', process.env.BREVO_API_KEY ? 'SET' : 'NOT SET');
 
     await axios.post('https://api.brevo.com/v3/smtp/email', {
-      sender:      { name: 'JourneyShield', email: process.env.BREVO_SMTP_USER },
+      sender:      { name: 'JourneyShield', email: process.env.BREVO_SENDER_EMAIL || 'dubeylooser@gmail.com' },
       to:          [{ email }],
       subject:     'Your JourneyShield Verification Code',
       htmlContent: `
