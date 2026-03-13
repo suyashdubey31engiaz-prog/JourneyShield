@@ -3,19 +3,11 @@ import Guide from '../models/guideModel.js';
 import OTP   from '../models/otpModel.js';
 import jwt        from 'jsonwebtoken';
 import bcrypt     from 'bcryptjs';
-import nodemailer from 'nodemailer';
+import * as Brevo from '@getbrevo/brevo';
 
-// Brevo SMTP — works on Render free tier (port 587 is allowed for Brevo)
-// Unlike Gmail SMTP, Brevo's relay is whitelisted on all major cloud providers
-const createTransporter = () => nodemailer.createTransport({
-  host:   'smtp-relay.brevo.com',
-  port:   587,
-  secure: false,
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_PASS,
-  },
-});
+// Brevo HTTP API — uses port 443 (HTTPS), never blocked on any cloud host
+const brevoClient = new Brevo.TransactionalEmailsApi();
+brevoClient.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET || 'your_super_secret_key', { expiresIn: '30d' });
@@ -32,25 +24,24 @@ export const sendRegistrationOTP = async (req, res) => {
     await OTP.create({ email, otp: generatedOtp });
 
     console.log('[OTP] Attempting to send email to:', email);
-    console.log('[OTP] BREVO_SMTP_USER:', process.env.BREVO_SMTP_USER ? 'SET' : 'NOT SET');
-    console.log('[OTP] BREVO_SMTP_PASS:', process.env.BREVO_SMTP_PASS ? 'SET' : 'NOT SET');
+    console.log('[OTP] BREVO_API_KEY:', process.env.BREVO_API_KEY ? 'SET' : 'NOT SET');
 
-    const transporter = createTransporter();
-    await transporter.sendMail({
-      from:    '"JourneyShield" <' + process.env.BREVO_SMTP_USER + '>',
-      to:      email,
-      subject: 'Your JourneyShield Verification Code',
-      html:    `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1f2937;border-radius:12px;color:#f9fafb">
-          <h2 style="color:#f59e0b;margin-bottom:8px">🛡️ JourneyShield</h2>
-          <p style="color:#9ca3af;margin-bottom:24px">Your verification code is:</p>
-          <div style="background:#111827;border-radius:8px;padding:24px;text-align:center;letter-spacing:12px;font-size:36px;font-weight:bold;color:#f59e0b">
-            ${generatedOtp}
-          </div>
-          <p style="color:#6b7280;font-size:13px;margin-top:24px">This code expires in 5 minutes. Do not share it with anyone.</p>
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
+    sendSmtpEmail.subject = 'Your JourneyShield Verification Code';
+    sendSmtpEmail.to = [{ email }];
+    sendSmtpEmail.sender = { name: 'JourneyShield', email: process.env.BREVO_SMTP_USER || 'noreply@journeyshield.com' };
+    sendSmtpEmail.htmlContent = `
+      <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;background:#1f2937;border-radius:12px;color:#f9fafb">
+        <h2 style="color:#f59e0b;margin-bottom:8px">🛡️ JourneyShield</h2>
+        <p style="color:#9ca3af;margin-bottom:24px">Your verification code is:</p>
+        <div style="background:#111827;border-radius:8px;padding:24px;text-align:center;letter-spacing:12px;font-size:36px;font-weight:bold;color:#f59e0b">
+          ${generatedOtp}
         </div>
-      `,
-    });
+        <p style="color:#6b7280;font-size:13px;margin-top:24px">This code expires in 5 minutes. Do not share it with anyone.</p>
+      </div>
+    `;
+
+    await brevoClient.sendTransacEmail(sendSmtpEmail);
     console.log('[OTP] Email sent successfully to:', email);
     res.status(200).json({ message: 'OTP sent successfully to your email' });
   } catch (err) {
