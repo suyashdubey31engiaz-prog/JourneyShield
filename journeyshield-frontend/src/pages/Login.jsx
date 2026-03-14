@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import Toast from '../components/common/Toast';
@@ -12,18 +12,28 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error,        setError]        = useState('');
   const [loading,      setLoading]      = useState(false);
-  const [toast,        setToast]        = useState(null); // { message, type }
+  const [toast,        setToast]        = useState(null);
+  const [wakingUp,     setWakingUp]     = useState(false);
   const navigate = useNavigate();
+
+  // Ping server on mount to wake Render from sleep
+  useEffect(() => {
+    axios.get(`${API_BASE}/`, { timeout: 60000 }).catch(() => {});
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (loading) return;
     setError('');
     setLoading(true);
+    setWakingUp(false);
+    const wakeTimer = setTimeout(() => setWakingUp(true), 4000);
     try {
       const { data } = await axios.post(`${API_BASE}/api/users/login`, {
         identifier, password, selectedRole: role,
       });
+      clearTimeout(wakeTimer);
+      setWakingUp(false);
       sessionStorage.setItem('user', JSON.stringify(data));
       setToast({ message: `Welcome back, ${data.name}! 🎉`, type: 'success' });
       setTimeout(() => {
@@ -31,6 +41,8 @@ const Login = () => {
         else navigate('/dashboard');
       }, 1500);
     } catch (err) {
+      clearTimeout(wakeTimer);
+      setWakingUp(false);
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
