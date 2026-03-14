@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTours, joinTour } from '../services/tourService';
+import Toast from '../components/common/Toast';
 
 const statusStyle = (s) => ({
   Open:      'bg-green-900/40 text-green-400 border-green-800/50',
@@ -12,7 +13,7 @@ const GroupTours = () => {
   const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(null);
-  const [toast,   setToast]   = useState('');
+  const [toast,   setToast]   = useState(null);
   const [filter,  setFilter]  = useState('All');
 
   useEffect(() => {
@@ -23,18 +24,18 @@ const GroupTours = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+  const flash = (msg, type = 'info') => setToast({ message: msg, type });
 
   const handleJoin = async (tourId) => {
-    if (!user) return flash('Please log in to join a tour.');
+    if (!user) return flash('Please log in to join a tour.', 'info');
     setJoining(tourId);
     try {
       await joinTour(tourId, user.token);
-      flash('✅ Successfully joined!');
+      flash('✅ Successfully joined the tour!', 'success');
       const d = await getTours();
       setTours(d);
     } catch (e) {
-      flash(e.response?.data?.message || '❌ Failed to join tour.');
+      flash(e.response?.data?.message || 'Failed to join tour.', 'error');
     } finally { setJoining(null); }
   };
 
@@ -58,11 +59,7 @@ const GroupTours = () => {
     <div className="container mx-auto px-6 py-10 max-w-6xl text-white animate-fadeIn">
 
       {/* Toast */}
-      {toast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-800 border border-gray-600 text-white font-bold px-6 py-3 rounded-xl shadow-2xl animate-fadeIn pointer-events-none">
-          {toast}
-        </div>
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
@@ -200,3 +197,4 @@ const GroupTours = () => {
 };
 
 export default GroupTours;
+//--- File: C:\Users\Suyash Dubey\OneDrive\Desktop\SafeJourney\journeyshield-frontend\src\pages\GuideDashboard.jsx ---
