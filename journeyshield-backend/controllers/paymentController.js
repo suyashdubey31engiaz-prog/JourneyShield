@@ -37,9 +37,14 @@ export const initiatePayment = async (req, res) => {
     const existing = await Payment.findOne({ booking: bookingId });
     if (existing) return res.status(400).json({ message: 'Payment already initiated for this booking.' });
 
-    // Get guide's price
-    const guideProfile = await Guide.findOne({ user: booking.guide._id });
+    // Get guide's price — handle both populated object and plain ObjectId
+    const guideUserId = booking.guide._id || booking.guide;
+    const guideProfile = await Guide.findOne({ user: guideUserId });
     const total = guideProfile?.pricePerHour || 0;
+
+    if (total === 0) {
+      console.warn(`[Payment] Guide ${guideUserId} has pricePerHour = 0`);
+    }
 
     // Calculate breakdown
     const breakdown = calcBreakdown(total);

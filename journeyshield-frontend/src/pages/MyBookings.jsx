@@ -28,9 +28,23 @@ const StarPicker = ({ value, onChange }) => (
 
 // ── Payment Method Modal ──────────────────────────────────────────────────────
 const PaymentMethodModal = ({ booking, onClose, onDone, token }) => {
-  const [selected, setSelected] = useState(null);
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
+  const [selected,    setSelected]    = useState(null);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [guidePrice,  setGuidePrice]  = useState(0);
+  const [priceLoading,setPriceLoading]= useState(true);
+
+  // Fetch guide's pricePerHour from public profile endpoint
+  useEffect(() => {
+    const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000');
+    fetch(`${API}/api/users/guide/${booking.guide._id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(data => setGuidePrice(data.pricePerHour || 0))
+    .catch(() => setGuidePrice(0))
+    .finally(() => setPriceLoading(false));
+  }, [booking.guide._id, token]);
 
   const methods = [
     { id: 'Cash',   icon: '💵', label: 'Cash (Offline)',   desc: 'Pay directly to the guide in person', available: true  },
@@ -45,7 +59,7 @@ const PaymentMethodModal = ({ booking, onClose, onDone, token }) => {
       await initiatePayment(booking._id, selected, token);
       onDone();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to initiate payment.');
+      setError(err.response?.data?.message || 'Failed to initiate payment. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +76,7 @@ const PaymentMethodModal = ({ booking, onClose, onDone, token }) => {
           <div>
             <h3 className="text-lg font-extrabold text-white">💳 Choose Payment Method</h3>
             <p className="text-gray-400 text-xs mt-0.5">
-              Amount: <span className="text-yellow-400 font-bold">₹{booking?.guidePrice || 0}</span>
+              Amount: <span className="text-yellow-400 font-bold">{priceLoading ? '...' : `₹${guidePrice}`}</span>
               {' '}· Guide: <span className="text-white">{booking?.guide?.name}</span>
             </p>
           </div>
