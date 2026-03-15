@@ -20,6 +20,7 @@ import geocodeRoutes      from './routes/geocodeRoutes.js';
 import incidentRoutes     from './routes/incidentRoutes.js';
 import alertRoutes        from './routes/alertRoutes.js';
 import chatRoutes         from './routes/chatRoutes.js';
+import paymentRoutes      from './routes/paymentRoutes.js';
 
 // Socket handlers
 import { registerSocketHandlers } from './socket/socketHandlers.js';
@@ -48,6 +49,7 @@ app.use('/api/geocode',  geocodeRoutes);
 app.use('/api/incidents',incidentRoutes);
 app.use('/api/alerts',   alertRoutes);
 app.use('/api/chat',     chatRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.get('/', (req, res) => res.send('JourneyShield API is running...'));
 
@@ -87,3 +89,4 @@ app.set('io', io);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+//--- File: C:\Users\Suyash Dubey\OneDrive\Desktop\SafeJourney\journeyshield-backend\test-api.js ---
