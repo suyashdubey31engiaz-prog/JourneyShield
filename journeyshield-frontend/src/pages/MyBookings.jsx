@@ -457,17 +457,22 @@ const BookingCard = ({ booking, isGuide, user, onStatusUpdate, onReview, onPayme
   const [hasPayment, setHasPayment] = useState(false);
 
   useEffect(() => {
+    if (!booking?._id) return;
+
+    // Load review for completed bookings (traveler only)
     if (!isGuide && booking?.status === 'Completed' && booking?.guide?._id) {
-      reviewService.getMyReviewForGuide(booking.guide._id, booking._id, user?.token)
-        .then(r => setMyReview(r)).catch(() => {});
+      reviewService.getMyReview(booking.guide._id)
+        .then(r => setMyReview(r.data))
+        .catch(() => setMyReview(null));
     }
-    // Check if payment exists for Accepted/Completed bookings
+
+    // Check if payment record exists (Accepted or Completed)
     if (['Accepted', 'Completed'].includes(booking?.status)) {
-      import('../services/bookingService').then(({ getPayment }) => {
-        getPayment(booking._id, user?.token).then(() => setHasPayment(true)).catch(() => setHasPayment(false));
-      });
+      getPayment(booking._id, user?.token)
+        .then(() => setHasPayment(true))
+        .catch(() => setHasPayment(false));
     }
-  }, [booking, isGuide, user]);
+  }, [booking?._id, booking?.status, isGuide, user?.token]);
 
   const { pill, label } = statusStyle(booking?.status);
   const guideName    = booking?.guide?.name    || 'Unknown Guide';
