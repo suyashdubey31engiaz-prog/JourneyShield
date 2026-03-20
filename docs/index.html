@@ -7,13 +7,14 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 :root{
-  --bg:#05080f;--s1:#0b1120;--s2:#111827;--s3:#1a2538;
-  --border:#1e2d47;--border2:#2a3f60;
-  --cyan:#00f5ff;--cyan-dim:#00c8d4;
+  --bg:#0d1117;--s1:#111827;--s2:#1a2236;--s3:#1f2b40;
+  --border:#1e2d3d;--border2:#2a3f58;
+  --gold:#f5b800;--gold-dim:#d4a017;--gold-glow:rgba(245,184,0,.35);
   --yellow:#ffe600;--green:#39ff14;--red:#ff4757;
   --orange:#ff8c42;--purple:#a78bfa;
-  --text:#dde4f0;--muted:#5d7299;--muted2:#7a93b8;
+  --text:#e8edf5;--muted:#5d7299;--muted2:#7a93b8;
   --mono:'JetBrains Mono',monospace;
+  --accent:#f5b800;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -21,68 +22,108 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);font
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);box-shadow:0 0 8px var(--gold)}
 *{scrollbar-width:thin;scrollbar-color:var(--border2) var(--bg)}
 
-/* ── Grid background ── */
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(0,245,255,.025) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(0,245,255,.025) 1px,transparent 1px);
+  background-image:linear-gradient(rgba(245,184,0,.018) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(245,184,0,.018) 1px,transparent 1px);
   background-size:48px 48px}
 
-/* ── Glow blobs ── */
 body::after{content:'';position:fixed;top:-20%;left:-10%;width:60%;height:60%;
-  background:radial-gradient(ellipse,rgba(0,245,255,.04) 0%,transparent 70%);
+  background:radial-gradient(ellipse,rgba(245,184,0,.03) 0%,transparent 70%);
   pointer-events:none;z-index:0}
 
 /* ── Layout ── */
 .shell{display:flex;min-height:100vh;position:relative;z-index:1}
 
 /* ── Sidebar ── */
-aside{width:240px;flex-shrink:0;background:rgba(11,17,32,.97);
+aside{width:240px;flex-shrink:0;background:rgba(13,17,23,.97);
   border-right:1px solid var(--border);display:flex;flex-direction:column;
   position:sticky;top:0;height:100vh;overflow-y:auto;
   backdrop-filter:blur(20px)}
-.sb-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
 .logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.logo-link{text-decoration:none;display:flex;align-items:center;gap:10px;
+  transition:opacity .15s}
+.logo-link:hover{opacity:.82}
 .logo-icon{width:34px;height:34px;border-radius:10px;
-  background:linear-gradient(135deg,#0e7490,#1d4ed8);
+  background:linear-gradient(135deg,#92400e,#b45309);
   display:flex;align-items:center;justify-content:center;font-size:16px;
-  box-shadow:0 0 16px rgba(0,245,255,.25)}
-.logo-name{font-size:17px;font-weight:800;letter-spacing:-.3px}
-.logo-name span{color:var(--cyan)}
-.sb-desc{font-size:11px;color:var(--muted);font-family:var(--mono);
-  background:rgba(0,245,255,.06);border:1px solid rgba(0,245,255,.12);
-  padding:3px 8px;border-radius:5px;display:inline-block;margin-top:2px}
-.sb-sec{padding:16px 20px 4px;font-size:9.5px;font-weight:700;
+  box-shadow:0 0 16px rgba(245,184,0,.2);flex-shrink:0}
+.logo-name{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
+.logo-name span{color:var(--gold)}
+
+/* Live Demo button */
+.sb-actions{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.sb-desc{font-size:10.5px;color:var(--muted);font-family:var(--mono);
+  background:rgba(245,184,0,.07);border:1px solid rgba(245,184,0,.18);
+  padding:3px 8px;border-radius:5px;display:inline-block;white-space:nowrap}
+.live-demo-btn{font-size:10px;font-weight:700;font-family:var(--mono);
+  background:var(--gold);color:#0d1117;padding:3px 9px;border-radius:5px;
+  text-decoration:none;border:none;cursor:pointer;white-space:nowrap;
+  transition:all .15s;letter-spacing:.03em;display:inline-flex;align-items:center;gap:4px}
+.live-demo-btn:hover{background:#ffd000;box-shadow:0 0 12px rgba(245,184,0,.4);transform:translateY(-1px)}
+.live-demo-btn::before{content:'↗';font-size:11px}
+
+.sb-sec{padding:14px 16px 3px;font-size:9.5px;font-weight:700;
   color:var(--border2);text-transform:uppercase;letter-spacing:.14em}
-aside a{display:flex;align-items:center;gap:9px;padding:7px 20px;
+aside a{display:flex;align-items:center;gap:9px;padding:7px 16px;
   font-size:12.5px;color:var(--muted2);text-decoration:none;
-  border-left:2px solid transparent;transition:all .15s;position:relative}
-aside a:hover,aside a.active{color:var(--cyan);background:rgba(0,245,255,.04);
-  border-left-color:var(--cyan)}
-aside a .ico{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+  border-left:2px solid transparent;transition:all .18s;position:relative}
+aside a:hover{color:var(--gold);background:rgba(245,184,0,.04);
+  border-left-color:rgba(245,184,0,.4)}
+aside a.active{color:var(--gold);background:rgba(245,184,0,.07);
+  border-left-color:var(--gold);font-weight:600}
+aside a.active .ico{filter:drop-shadow(0 0 4px rgba(245,184,0,.6))}
+aside a .ico{font-size:13px;width:16px;text-align:center;flex-shrink:0;transition:filter .18s}
+
+/* ── Mobile hamburger ── */
+.mob-header{display:none;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:rgba(13,17,23,.97);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.mob-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.mob-logo .logo-icon{width:28px;height:28px;font-size:13px}
+.mob-logo .logo-name{font-size:15px;font-weight:800}
+.mob-logo .logo-name span{color:var(--gold)}
+.hamburger{background:none;border:1px solid var(--border2);border-radius:6px;
+  padding:6px 9px;cursor:pointer;color:var(--text);font-size:15px;line-height:1;
+  transition:all .15s}
+.hamburger:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Mobile drawer */
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:200;backdrop-filter:blur(4px)}
+.mob-drawer{position:fixed;top:0;left:-260px;width:240px;height:100vh;
+  background:rgba(13,17,23,.99);border-right:1px solid var(--border);
+  z-index:201;overflow-y:auto;transition:left .25s cubic-bezier(.4,0,.2,1)}
+.mob-drawer.open{left:0}
+.mob-overlay.open{display:block}
+.mob-close{position:absolute;top:14px;right:14px;background:none;border:none;
+  color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;
+  border-radius:6px;transition:color .15s}
+.mob-close:hover{color:var(--gold)}
 
 /* ── Main content ── */
 main{flex:1;padding:48px 56px;max-width:940px;min-width:0;position:relative}
 
 /* ── Typography ── */
 h1{font-size:40px;font-weight:900;letter-spacing:-.8px;line-height:1.1;margin-bottom:14px}
-h1 .accent{color:var(--cyan);text-shadow:0 0 30px rgba(0,245,255,.4)}
+h1 .accent{color:var(--gold);text-shadow:0 0 30px var(--gold-glow)}
 h2{font-size:18px;font-weight:800;margin:52px 0 16px;padding-bottom:12px;
   border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 h2 .ico{font-size:16px}
-h3{font-size:12.5px;font-weight:700;color:var(--cyan);margin:24px 0 8px;
+h3{font-size:12.5px;font-weight:700;color:var(--gold);margin:24px 0 8px;
   text-transform:uppercase;letter-spacing:.1em}
-h4{font-size:13px;font-weight:700;color:var(--yellow);margin:16px 0 6px}
+h4{font-size:13px;font-weight:700;color:var(--gold);margin:16px 0 6px}
 p{color:#b0bfd8;margin-bottom:10px;font-size:13.5px;line-height:1.75}
 ul,ol{padding-left:20px;margin-bottom:12px}
 li{color:#a0b4cc;font-size:13px;margin-bottom:5px;line-height:1.65}
 li strong{color:var(--text);font-weight:600}
 strong{color:var(--text);font-weight:600}
-code{font-family:var(--mono);font-size:11.5px;background:rgba(0,245,255,.07);
-  color:var(--cyan);padding:2px 7px;border-radius:4px;
-  border:1px solid rgba(0,245,255,.12)}
+code{font-family:var(--mono);font-size:11.5px;background:rgba(245,184,0,.07);
+  color:var(--gold);padding:2px 7px;border-radius:4px;
+  border:1px solid rgba(245,184,0,.18)}
 hr{border:none;border-top:1px solid var(--border);margin:36px 0}
 
 /* ── Code block ── */
@@ -90,20 +131,20 @@ pre{background:#040810;border:1px solid var(--border);border-radius:11px;
   padding:18px 20px;overflow-x:auto;margin:12px 0 18px}
 pre code{font-family:var(--mono);font-size:12px;color:#7090b0;
   background:none;border:none;padding:0;line-height:1.8}
-.hl-cmd{color:#39ff14}.hl-key{color:#00f5ff}.hl-val{color:#ffe600}
-.hl-cmt{color:#2a3f60;font-style:italic}.hl-str{color:#a5d6a7}
+.hl-cmd{color:#39ff14}.hl-key{color:var(--gold)}.hl-val{color:#ffe600}
+.hl-cmt{color:#2a4060;font-style:italic}.hl-str{color:#a5d6a7}
 .hl-dim{color:#1e2d47}
 
 /* ── Hero section ── */
 .hero{padding:0 0 40px;border-bottom:1px solid var(--border);margin-bottom:8px;position:relative}
 .hero-glow{position:absolute;top:-60px;right:-80px;width:400px;height:300px;
-  background:radial-gradient(ellipse,rgba(0,245,255,.06) 0%,transparent 70%);
+  background:radial-gradient(ellipse,rgba(245,184,0,.05) 0%,transparent 70%);
   pointer-events:none}
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px}
 .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;
   border-radius:99px;font-size:10.5px;font-weight:700;border:1px solid}
-.tag.c{color:var(--cyan);border-color:rgba(0,245,255,.25);background:rgba(0,245,255,.06)}
-.tag.y{color:var(--yellow);border-color:rgba(255,230,0,.25);background:rgba(255,230,0,.06)}
+.tag.c{color:var(--gold);border-color:rgba(245,184,0,.3);background:rgba(245,184,0,.07)}
+.tag.y{color:#ffd166;border-color:rgba(255,209,102,.25);background:rgba(255,209,102,.06)}
 .tag.g{color:var(--green);border-color:rgba(57,255,20,.25);background:rgba(57,255,20,.06)}
 .tag.p{color:var(--purple);border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.06)}
 .tag.o{color:var(--orange);border-color:rgba(255,140,66,.25);background:rgba(255,140,66,.06)}
@@ -114,63 +155,72 @@ pre code{font-family:var(--mono);font-size:12px;color:#7090b0;
   overflow:hidden;margin-bottom:0}
 .stat{flex:1;padding:14px 16px;text-align:center;border-right:1px solid var(--border)}
 .stat:last-child{border:none}
-.stat-n{font-size:22px;font-weight:900;color:var(--cyan);
-  text-shadow:0 0 20px rgba(0,245,255,.35);line-height:1}
+.stat-n{font-size:22px;font-weight:900;color:var(--gold);
+  text-shadow:0 0 20px var(--gold-glow);line-height:1}
 .stat-l{font-size:10.5px;color:var(--muted);margin-top:4px;font-weight:600;
   text-transform:uppercase;letter-spacing:.07em}
 
 /* ── Cards ── */
-.card{background:rgba(17,24,39,.75);backdrop-filter:blur(16px);
+.card{background:rgba(26,34,54,.75);backdrop-filter:blur(16px);
   border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin:12px 0;
   transition:border-color .2s}
 .card:hover{border-color:var(--border2)}
-.card.glow-c:hover{border-color:rgba(0,245,255,.35);box-shadow:0 0 20px rgba(0,245,255,.06)}
-.card.glow-y:hover{border-color:rgba(255,230,0,.35);box-shadow:0 0 20px rgba(255,230,0,.06)}
+.card.glow-c:hover{border-color:rgba(245,184,0,.35);box-shadow:0 0 20px rgba(245,184,0,.06)}
+.card.glow-y:hover{border-color:rgba(245,184,0,.35);box-shadow:0 0 20px rgba(245,184,0,.06)}
 
 /* ── Info boxes ── */
 .box{border-radius:10px;padding:14px 18px;margin:14px 0;border:1px solid}
 .box p{margin:0;font-size:13px;line-height:1.7}
 .box .bt{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
-.box.cyan{background:rgba(0,245,255,.04);border-color:rgba(0,245,255,.18)}.box.cyan .bt{color:var(--cyan)}
-.box.yellow{background:rgba(255,230,0,.04);border-color:rgba(255,230,0,.18)}.box.yellow .bt{color:var(--yellow)}
+.box.cyan{background:rgba(245,184,0,.04);border-color:rgba(245,184,0,.2)}.box.cyan .bt{color:var(--gold)}
+.box.yellow{background:rgba(245,184,0,.04);border-color:rgba(245,184,0,.2)}.box.yellow .bt{color:var(--gold)}
 .box.red{background:rgba(255,71,87,.04);border-color:rgba(255,71,87,.18)}.box.red .bt{color:var(--red)}
 .box.green{background:rgba(57,255,20,.04);border-color:rgba(57,255,20,.18)}.box.green .bt{color:var(--green)}
 
 /* ── Tables ── */
 table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:12.5px}
 th{background:var(--s2);border:1px solid var(--border);padding:9px 13px;
-  text-align:left;color:var(--cyan);font-size:10px;text-transform:uppercase;
+  text-align:left;color:var(--gold);font-size:10px;text-transform:uppercase;
   letter-spacing:.09em;font-weight:700}
 td{border:1px solid var(--border);padding:9px 13px;color:#a0b4cc;vertical-align:top}
 tr:nth-child(even) td{background:rgba(255,255,255,.015)}
 td code{font-size:11px}
 
-/* ── File tree ── */
-.tree{background:#040810;border:1px solid var(--border);border-radius:12px;
-  padding:20px 24px;font-family:var(--mono);font-size:12px;margin:14px 0 20px;
-  line-height:2.1;overflow-x:auto}
-.f{color:#4a6882}       /* connector lines */
-.d{color:var(--yellow);font-weight:700}    /* directory */
-.fi{color:#7090b0}      /* regular file */
-.fi.root{color:#93b4d8} /* root-level file */
-.fi.new{color:var(--cyan);font-weight:600} /* new file */
-.cm{color:#2a4060;font-style:italic;margin-left:8px;font-size:11px} /* comment */
+/* ════════════════════════════════
+   FOLDER TREE — fully responsive
+   ════════════════════════════════ */
+.tree-wrap{
+  background:#040810;border:1px solid var(--border);border-radius:12px;
+  padding:20px 20px;margin:14px 0 20px;overflow-x:auto}
+.tree-root{font-family:var(--mono);font-size:12.5px;line-height:1.9;
+  white-space:nowrap;display:inline-block;min-width:100%}
+/* Tree rows */
+.tr{display:flex;align-items:baseline;gap:0;padding:0}
+/* connector column */
+.tc{color:#2a4060;flex-shrink:0;user-select:none;width:max-content;white-space:pre}
+/* name */
+.td{color:#7090b0;flex-shrink:0}
+.td.dir{color:#f5b800;font-weight:700}
+.td.root-file{color:#93b4d8}
+.td.new-file{color:#f5b800;font-weight:600}
+/* comment */
+.tco{color:#2a4060;font-style:italic;font-size:11px;margin-left:10px;
+  white-space:nowrap;flex-shrink:0}
+/* indent group */
+.tg{margin-left:20px;border-left:1px solid #1e2d3d;padding-left:0}
 
-/* ── Route method pills ── */
-.rt{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;
-  padding:2px 7px;border-radius:3px;margin-right:4px}
-.GET{background:rgba(57,255,20,.1);color:var(--green)}
-.POST{background:rgba(0,245,255,.1);color:var(--cyan)}
-.PUT{background:rgba(255,230,0,.1);color:var(--yellow)}
-.DEL{background:rgba(255,71,87,.1);color:var(--red)}
+@media(max-width:600px){
+  .tree-root{font-size:11px}
+  .tco{display:none}
+}
 
 /* ── Schema cards ── */
 .schema-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
   gap:10px;margin:12px 0 20px}
 .sc{background:var(--s2);border:1px solid var(--border);border-radius:10px;
   padding:14px 16px;transition:border-color .2s}
-.sc:hover{border-color:rgba(255,230,0,.3)}
-.sc h5{font-size:11.5px;font-weight:700;color:var(--yellow);margin-bottom:10px;
+.sc:hover{border-color:rgba(245,184,0,.3)}
+.sc h5{font-size:11.5px;font-weight:700;color:var(--gold);margin-bottom:10px;
   font-family:var(--mono);padding-bottom:6px;border-bottom:1px solid var(--border)}
 .fr{display:flex;justify-content:space-between;align-items:baseline;
   padding:3px 0;border-bottom:1px solid rgba(255,255,255,.03)}
@@ -182,12 +232,12 @@ td code{font-size:11px}
 /* ── Flow steps ── */
 .flow{display:flex;flex-direction:column;margin:14px 0 20px;position:relative}
 .flow::before{content:'';position:absolute;left:13px;top:26px;bottom:26px;
-  width:1px;background:linear-gradient(to bottom,var(--cyan),transparent);opacity:.3}
+  width:1px;background:linear-gradient(to bottom,var(--gold),transparent);opacity:.3}
 .fl{display:grid;grid-template-columns:28px 1fr;gap:14px;padding:12px 0;
   position:relative}
 .fl-num{width:26px;height:26px;border-radius:8px;
-  background:rgba(0,245,255,.1);border:1px solid rgba(0,245,255,.25);
-  color:var(--cyan);font-size:11px;font-weight:800;
+  background:rgba(245,184,0,.1);border:1px solid rgba(245,184,0,.3);
+  color:var(--gold);font-size:11px;font-weight:800;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   margin-top:2px;position:relative;z-index:1}
 .fl-body h5{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px}
@@ -198,37 +248,37 @@ td code{font-size:11px}
   border:1px solid var(--border);border-radius:8px;overflow:hidden;
   margin:5px 0;font-family:var(--mono);font-size:12px}
 .env-item+.env-item{margin-top:6px}
-.ek{background:var(--s2);padding:9px 14px;color:var(--yellow);
+.ek{background:var(--s2);padding:9px 14px;color:var(--gold);
   border-right:1px solid var(--border);display:flex;align-items:center;word-break:break-all}
 .ev{background:var(--s1);padding:9px 14px;color:var(--muted2);
   display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ev .note{font-family:'Outfit',sans-serif;font-size:10.5px;flex-shrink:0}
-.note.req{color:var(--red)}.note.opt{color:var(--muted)}.note.new{color:var(--cyan)}
+.note.req{color:var(--red)}.note.opt{color:var(--muted)}.note.new{color:var(--gold)}
+
+@media(max-width:540px){
+  .env-item{grid-template-columns:1fr}
+  .ek{border-right:none;border-bottom:1px solid var(--border)}
+}
 
 /* ── Checklist ── */
 .ck{display:flex;align-items:flex-start;gap:12px;padding:10px 0;
   border-bottom:1px solid rgba(255,255,255,.04)}
 .ck:last-child{border:none}
 .ckbox{width:20px;height:20px;border:2px solid var(--border2);border-radius:5px;
-  flex-shrink:0;margin-top:1px;background:rgba(0,245,255,.03)}
+  flex-shrink:0;margin-top:1px;background:rgba(245,184,0,.03)}
 .ck p{margin:0;font-size:13px;color:#90a8c4;line-height:1.6}
 
 /* ── Two col ── */
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+@media(max-width:600px){.two{grid-template-columns:1fr}}
 
-/* ── Role badge ── */
-.role{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
-  border-radius:4px;font-size:10.5px;font-weight:700;vertical-align:middle;margin-left:4px}
-.role.t{background:rgba(0,245,255,.1);color:var(--cyan);border:1px solid rgba(0,245,255,.2)}
-.role.g{background:rgba(255,230,0,.1);color:var(--yellow);border:1px solid rgba(255,230,0,.2)}
-.role.b{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
-.role.pub{background:rgba(57,255,20,.08);color:var(--green);border:1px solid rgba(57,255,20,.2)}
-
-/* ── Footer ── */
-footer{color:var(--muted);font-size:12px;text-align:center;padding:36px 0 52px;
-  border-top:1px solid var(--border);margin-top:52px}
-footer a{color:var(--cyan);text-decoration:none}
-footer a:hover{text-shadow:0 0 8px var(--cyan)}
+/* ── Route method pills ── */
+.rt{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:3px;margin-right:4px}
+.GET{background:rgba(57,255,20,.1);color:var(--green)}
+.POST{background:rgba(245,184,0,.1);color:var(--gold)}
+.PUT{background:rgba(255,230,0,.1);color:var(--yellow)}
+.DEL{background:rgba(255,71,87,.1);color:var(--red)}
 
 /* ── Pulse dot ── */
 .live{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;
@@ -238,43 +288,116 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
   display:inline-block;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
 
-@media(max-width:820px){aside{display:none}main{padding:28px 18px}}
+/* ── Footer ── */
+footer{color:var(--muted);font-size:12px;text-align:center;padding:36px 0 52px;
+  border-top:1px solid var(--border);margin-top:52px}
+footer a{color:var(--gold);text-decoration:none}
+footer a:hover{text-shadow:0 0 8px var(--gold)}
+
+/* ── Responsive main ── */
+@media(max-width:820px){
+  aside{display:none}
+  .mob-header{display:flex}
+  main{padding:24px 18px}
+  .stats{flex-wrap:wrap}
+  .stat{min-width:calc(33% - 1px)}
+  h1{font-size:28px}
+  .schema-grid{grid-template-columns:1fr}
+  .hero-glow{display:none}
+}
+@media(max-width:480px){
+  .stat{min-width:calc(50% - 1px)}
+  main{padding:18px 14px}
+}
 </style>
 </head>
 <body>
+
+<!-- ════════ MOBILE HEADER ════════ -->
+<div class="mob-header">
+  <a href="https://journey-shield.vercel.app/" target="_blank" class="mob-logo">
+    <div class="logo-icon">🛡️</div>
+    <div class="logo-name">Journey<span>Shield</span></div>
+  </a>
+  <button class="hamburger" id="menuBtn" aria-label="Open menu">☰</button>
+</div>
+
+<!-- Mobile overlay -->
+<div class="mob-overlay" id="overlay"></div>
+
+<!-- Mobile drawer (clone of sidebar) -->
+<div class="mob-drawer" id="drawer">
+  <button class="mob-close" id="closeBtn">✕</button>
+  <div class="sb-logo" style="margin-top:8px">
+    <div class="logo-mark">
+      <a href="https://journey-shield.vercel.app/" target="_blank" class="logo-link">
+        <div class="logo-icon">🛡️</div>
+        <div class="logo-name">Journey<span>Shield</span></div>
+      </a>
+    </div>
+    <div class="sb-actions">
+      <span class="sb-desc">Project Docs v1.0</span>
+      <a href="https://journey-shield.vercel.app/" target="_blank" class="live-demo-btn">Live Demo</a>
+    </div>
+  </div>
+  <div class="sb-sec">Overview</div>
+  <a href="#overview" class="nav-link mob-nav"><span class="ico">🗺️</span>What It Does</a>
+  <a href="#stack" class="nav-link mob-nav"><span class="ico">⚙️</span>Tech Stack</a>
+  <a href="#roles" class="nav-link mob-nav"><span class="ico">👥</span>User Roles</a>
+  <div class="sb-sec">Structure</div>
+  <a href="#folder" class="nav-link mob-nav"><span class="ico">📁</span>Folder Structure</a>
+  <a href="#models" class="nav-link mob-nav"><span class="ico">🗄️</span>Database Models</a>
+  <a href="#routes" class="nav-link mob-nav"><span class="ico">🛣️</span>API Endpoints</a>
+  <div class="sb-sec">Features</div>
+  <a href="#auth" class="nav-link mob-nav"><span class="ico">🔐</span>Auth Flow</a>
+  <a href="#chat" class="nav-link mob-nav"><span class="ico">💬</span>Real-time Chat</a>
+  <a href="#map" class="nav-link mob-nav"><span class="ico">🗺️</span>Map &amp; Safety</a>
+  <a href="#booking" class="nav-link mob-nav"><span class="ico">📅</span>Booking &amp; Payment</a>
+  <div class="sb-sec">Setup</div>
+  <a href="#env" class="nav-link mob-nav"><span class="ico">🔑</span>Environment Keys</a>
+  <a href="#run" class="nav-link mob-nav"><span class="ico">▶️</span>Running Locally</a>
+  <a href="#deploy" class="nav-link mob-nav"><span class="ico">🌐</span>Deployment</a>
+  <a href="#checklist" class="nav-link mob-nav"><span class="ico">✅</span>Checklist</a>
+</div>
+
 <div class="shell">
 
 <!-- ════════ SIDEBAR ════════ -->
 <aside>
   <div class="sb-logo">
     <div class="logo-mark">
-      <div class="logo-icon">🛡️</div>
-      <div class="logo-name">Journey<span>Shield</span></div>
+      <a href="https://journey-shield.vercel.app/" target="_blank" class="logo-link">
+        <div class="logo-icon">🛡️</div>
+        <div class="logo-name">Journey<span>Shield</span></div>
+      </a>
     </div>
-    <span class="sb-desc">Project Docs v1.0</span>
+    <div class="sb-actions">
+      <span class="sb-desc">Project Docs v1.0</span>
+      <a href="https://journey-shield.vercel.app/" target="_blank" class="live-demo-btn">Live Demo</a>
+    </div>
   </div>
 
   <div class="sb-sec">Overview</div>
-  <a href="#overview"><span class="ico">🗺️</span>What It Does</a>
-  <a href="#stack"><span class="ico">⚙️</span>Tech Stack</a>
-  <a href="#roles"><span class="ico">👥</span>User Roles</a>
+  <a href="#overview" class="nav-link"><span class="ico">🗺️</span>What It Does</a>
+  <a href="#stack" class="nav-link"><span class="ico">⚙️</span>Tech Stack</a>
+  <a href="#roles" class="nav-link"><span class="ico">👥</span>User Roles</a>
 
   <div class="sb-sec">Structure</div>
-  <a href="#folder"><span class="ico">📁</span>Folder Structure</a>
-  <a href="#models"><span class="ico">🗄️</span>Database Models</a>
-  <a href="#routes"><span class="ico">🛣️</span>API Endpoints</a>
+  <a href="#folder" class="nav-link"><span class="ico">📁</span>Folder Structure</a>
+  <a href="#models" class="nav-link"><span class="ico">🗄️</span>Database Models</a>
+  <a href="#routes" class="nav-link"><span class="ico">🛣️</span>API Endpoints</a>
 
   <div class="sb-sec">Features</div>
-  <a href="#auth"><span class="ico">🔐</span>Auth Flow</a>
-  <a href="#chat"><span class="ico">💬</span>Real-time Chat</a>
-  <a href="#map"><span class="ico">🗺️</span>Map &amp; Safety</a>
-  <a href="#booking"><span class="ico">📅</span>Booking &amp; Payment</a>
+  <a href="#auth" class="nav-link"><span class="ico">🔐</span>Auth Flow</a>
+  <a href="#chat" class="nav-link"><span class="ico">💬</span>Real-time Chat</a>
+  <a href="#map" class="nav-link"><span class="ico">🗺️</span>Map &amp; Safety</a>
+  <a href="#booking" class="nav-link"><span class="ico">📅</span>Booking &amp; Payment</a>
 
   <div class="sb-sec">Setup</div>
-  <a href="#env"><span class="ico">🔑</span>Environment Keys</a>
-  <a href="#run"><span class="ico">▶️</span>Running Locally</a>
-  <a href="#deploy"><span class="ico">🌐</span>Deployment</a>
-  <a href="#checklist"><span class="ico">✅</span>Checklist</a>
+  <a href="#env" class="nav-link"><span class="ico">🔑</span>Environment Keys</a>
+  <a href="#run" class="nav-link"><span class="ico">▶️</span>Running Locally</a>
+  <a href="#deploy" class="nav-link"><span class="ico">🌐</span>Deployment</a>
+  <a href="#checklist" class="nav-link"><span class="ico">✅</span>Checklist</a>
 </aside>
 
 <!-- ════════ MAIN ════════ -->
@@ -283,7 +406,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <!-- HERO -->
 <section class="hero" id="overview">
   <div class="hero-glow"></div>
-
   <div class="tag-row">
     <span class="tag c">MERN Stack</span>
     <span class="tag y">Socket.IO Real-time</span>
@@ -292,14 +414,12 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <span class="tag o">Brevo Email</span>
     <span class="tag c"><span class="live"></span>&nbsp;Live on Render + Vercel</span>
   </div>
-
   <h1>Journey<span class="accent">Shield</span></h1>
   <p class="hero-sub">
     A full-stack travel safety platform connecting <strong>Travelers</strong> and local <strong>Guides</strong>.
     Travelers discover places on a live interactive map, check real-time locality safety scores,
     hire verified guides, chat with rich media support, book tours, and pay — all in one app.
   </p>
-
   <div class="stats">
     <div class="stat"><div class="stat-n">13</div><div class="stat-l">DB Models</div></div>
     <div class="stat"><div class="stat-n">40+</div><div class="stat-l">API Routes</div></div>
@@ -311,7 +431,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 
 <!-- TECH STACK -->
 <h2 id="stack"><span class="ico">⚙️</span>Tech Stack</h2>
-
 <table>
   <tr><th>Category</th><th>Technology</th><th>Purpose</th></tr>
   <tr><td><strong>Backend Runtime</strong></td><td>Node.js 18+ (ESM modules)</td><td>Server-side JS with <code>import/export</code> syntax</td></tr>
@@ -320,7 +439,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
   <tr><td><strong>Real-time</strong></td><td>Socket.IO v4</td><td>Live chat, typing indicators, read receipts</td></tr>
   <tr><td><strong>Auth</strong></td><td>JWT + bcryptjs</td><td>Stateless tokens, secure password hashing</td></tr>
   <tr><td><strong>Email (OTP)</strong></td><td>Brevo REST API</td><td>Registration email verification — 6-digit OTP, 5 min TTL</td></tr>
-  <tr><td><strong>Media Storage</strong></td><td>Cloudinary</td><td>Avatar images + chat files/images/audio — keeps MongoDB lean</td></tr>
+  <tr><td><strong>Media Storage</strong></td><td>Cloudinary</td><td>Avatar images + chat files/images/audio</td></tr>
   <tr><td><strong>Maps</strong></td><td>Leaflet + react-leaflet</td><td>Interactive map on the Discover page</td></tr>
   <tr><td><strong>Geocoding + Routes</strong></td><td>TomTom API</td><td>City → coordinates, route polyline calculation</td></tr>
   <tr><td><strong>Places (POI)</strong></td><td>Foursquare API</td><td>Nearby attractions, restaurants, museums</td></tr>
@@ -369,142 +488,185 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <h2 id="folder"><span class="ico">📁</span>Folder Structure</h2>
 <p>Two completely independent sub-projects under one parent folder. They communicate over HTTP and WebSockets.</p>
 
-<div class="tree">
-<span class="d">SafeJourney/</span>
-│
-<span class="f">├──</span> <span class="d">journeyshield-backend/</span>
-<span class="f">│   ├──</span> <span class="fi root">.env</span>                       <span class="cm">all secret keys — never committed to git</span>
-<span class="f">│   ├──</span> <span class="fi root">.gitignore</span>
-<span class="f">│   ├──</span> <span class="fi root">package.json</span>
-<span class="f">│   ├──</span> <span class="fi root">server.js</span>                  <span class="cm">Express app, Socket.IO setup, all routes mounted here</span>
-<span class="f">│   ├──</span> <span class="fi root">seeder.js</span>                  <span class="cm">seeds test users, guides, bookings</span>
-<span class="f">│   │</span>
-<span class="f">│   ├──</span> <span class="d">config/</span>
-<span class="f">│   │   ├──</span> <span class="fi">db.js</span>                  <span class="cm">mongoose.connect() using MONGO_URI</span>
-<span class="f">│   │   └──</span> <span class="fi new">cloudinary.js</span>          <span class="cm">Cloudinary SDK configuration</span>
-<span class="f">│   │</span>
-<span class="f">│   ├──</span> <span class="d">controllers/</span>               <span class="cm">all business logic lives here</span>
-<span class="f">│   │   ├──</span> <span class="fi">alertController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">bookingController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">chatController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">geocodeController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">guideController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">incidentController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">paymentController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">placesController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">reviewController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">safetyReportController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">searchController.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">tourController.js</span>
-<span class="f">│   │   └──</span> <span class="fi">userController.js</span>
-<span class="f">│   │</span>
-<span class="f">│   ├──</span> <span class="d">data/</span>
-<span class="f">│   │   └──</span> <span class="fi">incidentSeeder.js</span>      <span class="cm">seeds incident data for the safety map</span>
-<span class="f">│   │</span>
-<span class="f">│   ├──</span> <span class="d">middleware/</span>
-<span class="f">│   │   ├──</span> <span class="fi">authMiddleware.js</span>      <span class="cm">JWT protect() — guards all private routes</span>
-<span class="f">│   │   └──</span> <span class="fi new">upload.js</span>              <span class="cm">multer + multer-storage-cloudinary</span>
-<span class="f">│   │</span>
-<span class="f">│   ├──</span> <span class="d">models/</span>                    <span class="cm">13 Mongoose schemas</span>
-<span class="f">│   │   ├──</span> <span class="fi">alertModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">bookingModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">chatLogModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">chatRequestModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">conversationModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">guideModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">incidentModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">messageModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">otpModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">paymentModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">reviewModel.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">tourModel.js</span>
-<span class="f">│   │   └──</span> <span class="fi">userModel.js</span>
-<span class="f">│   │</span>
-<span class="f">│   ├──</span> <span class="d">routes/</span>                    <span class="cm">thin — import controller, define method + path</span>
-<span class="f">│   │   ├──</span> <span class="fi">alertRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">bookingRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">chatRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">geocodeRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">guideRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">incidentRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">paymentRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">placesRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">reviewRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">safetyReportRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">searchRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">tourRoutes.js</span>
-<span class="f">│   │   ├──</span> <span class="fi">uploadRoutes.js</span>        <span class="cm">POST /api/upload/avatar</span>
-<span class="f">│   │   ├──</span> <span class="fi">userRoutes.js</span>
-<span class="f">│   │   └──</span> <span class="fi">weatherRoutes.js</span>
-<span class="f">│   │</span>
-<span class="f">│   └──</span> <span class="d">socket/</span>
-<span class="f">│       └──</span> <span class="fi">socketHandlers.js</span>     <span class="cm">all Socket.IO event registration</span>
-│
-<span class="f">└──</span> <span class="d">journeyshield-frontend/</span>
-<span class="f">    ├──</span> <span class="fi root">.env</span>
-<span class="f">    ├──</span> <span class="fi root">.gitignore</span>
-<span class="f">    ├──</span> <span class="fi root">eslint.config.js</span>
-<span class="f">    ├──</span> <span class="fi root">index.html</span>
-<span class="f">    ├──</span> <span class="fi root">package.json</span>
-<span class="f">    ├──</span> <span class="fi root">postcss.config.js</span>
-<span class="f">    ├──</span> <span class="fi root">tailwind.config.js</span>
-<span class="f">    ├──</span> <span class="fi root">vercel.json</span>            <span class="cm">SPA rewrite — all routes → index.html</span>
-<span class="f">    ├──</span> <span class="fi root">vite.config.js</span>
-<span class="f">    │</span>
-<span class="f">    ├──</span> <span class="d">public/</span>
-<span class="f">    │</span>
-<span class="f">    └──</span> <span class="d">src/</span>
-<span class="f">        ├──</span> <span class="fi">App.jsx</span>
-<span class="f">        ├──</span> <span class="fi">index.css</span>
-<span class="f">        ├──</span> <span class="fi">main.jsx</span>
-<span class="f">        │</span>
-<span class="f">        ├──</span> <span class="d">assets/</span>
-<span class="f">        │   └──</span> <span class="fi">logo.svg</span>
-<span class="f">        │</span>
-<span class="f">        ├──</span> <span class="d">components/</span>
-<span class="f">        │   ├──</span> <span class="d">common/</span>
-<span class="f">        │   │   ├──</span> <span class="fi">ProtectedRoute.jsx</span>
-<span class="f">        │   │   ├──</span> <span class="fi">SafetyModal.jsx</span>
-<span class="f">        │   │   ├──</span> <span class="fi">SimpleMap.jsx</span>
-<span class="f">        │   │   └──</span> <span class="fi">Toast.jsx</span>
-<span class="f">        │   └──</span> <span class="d">layout/</span>
-<span class="f">        │       └──</span> <span class="fi">Navbar.jsx</span>
-<span class="f">        │</span>
-<span class="f">        ├──</span> <span class="d">pages/</span>                 <span class="cm">15 pages, role-protected where needed</span>
-<span class="f">        │   ├──</span> <span class="fi">Alerts.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Chat.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Dashboard.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Discover.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">EditProfile.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">GroupTours.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">GuideDashboard.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">GuideReviews.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Guides.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Guideviewtravelerprofile.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">HomePage.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Login.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">MyBookings.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Myprofile.jsx</span>
-<span class="f">        │   ├──</span> <span class="fi">Registration.jsx</span>
-<span class="f">        │   └──</span> <span class="fi">TravelerEditProfile.jsx</span>
-<span class="f">        │</span>
-<span class="f">        └──</span> <span class="d">services/</span>              <span class="cm">one file per backend API section</span>
-<span class="f">            ├──</span> <span class="fi">alertService.js</span>
-<span class="f">            ├──</span> <span class="fi">authService.js</span>
-<span class="f">            ├──</span> <span class="fi">bookingService.js</span>
-<span class="f">            ├──</span> <span class="fi">chatService.js</span>
-<span class="f">            ├──</span> <span class="fi">geocodeService.js</span>
-<span class="f">            ├──</span> <span class="fi">guidesService.js</span>
-<span class="f">            ├──</span> <span class="fi">incidentService.js</span>
-<span class="f">            ├──</span> <span class="fi">keepAlive.js</span>
-<span class="f">            ├──</span> <span class="fi">placesService.js</span>
-<span class="f">            ├──</span> <span class="fi">reviewService.js</span>
-<span class="f">            ├──</span> <span class="fi">routeService.js</span>
-<span class="f">            ├──</span> <span class="fi">safetyReportService.js</span>
-<span class="f">            ├──</span> <span class="fi">searchService.js</span>
-<span class="f">            ├──</span> <span class="fi">tourService.js</span>
-<span class="f">            └──</span> <span class="fi">travelerService.js</span>
+<!-- ══ RESPONSIVE TREE ══ -->
+<div class="tree-wrap">
+<div class="tree-root">
+
+<div class="tr"><span class="td dir">SafeJourney/</span></div>
+
+<div class="tg">
+  <!-- Backend -->
+  <div class="tr"><span class="tc">├── </span><span class="td dir">journeyshield-backend/</span></div>
+  <div class="tg">
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">.env</span><span class="tco">all secret keys — never committed to git</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">.gitignore</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">package.json</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">server.js</span><span class="tco">Express app, Socket.IO setup, all routes mounted here</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">seeder.js</span><span class="tco">seeds test users, guides, bookings</span></div>
+
+    <!-- config/ -->
+    <div class="tr"><span class="tc">├── </span><span class="td dir">config/</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">├── </span><span class="td">db.js</span><span class="tco">mongoose.connect() using MONGO_URI</span></div>
+      <div class="tr"><span class="tc">└── </span><span class="td new-file">cloudinary.js</span><span class="tco">Cloudinary SDK configuration</span></div>
+    </div>
+
+    <!-- controllers/ -->
+    <div class="tr"><span class="tc">├── </span><span class="td dir">controllers/</span><span class="tco">all business logic lives here</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">├── </span><span class="td">alertController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">bookingController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">chatController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">geocodeController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">guideController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">incidentController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">paymentController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">placesController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">reviewController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">safetyReportController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">searchController.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">tourController.js</span></div>
+      <div class="tr"><span class="tc">└── </span><span class="td">userController.js</span></div>
+    </div>
+
+    <!-- data/ -->
+    <div class="tr"><span class="tc">├── </span><span class="td dir">data/</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">└── </span><span class="td">incidentSeeder.js</span><span class="tco">seeds incident data for the safety map</span></div>
+    </div>
+
+    <!-- middleware/ -->
+    <div class="tr"><span class="tc">├── </span><span class="td dir">middleware/</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">├── </span><span class="td">authMiddleware.js</span><span class="tco">JWT protect() — guards all private routes</span></div>
+      <div class="tr"><span class="tc">└── </span><span class="td new-file">upload.js</span><span class="tco">multer + multer-storage-cloudinary</span></div>
+    </div>
+
+    <!-- models/ -->
+    <div class="tr"><span class="tc">├── </span><span class="td dir">models/</span><span class="tco">13 Mongoose schemas</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">├── </span><span class="td">alertModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">bookingModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">chatLogModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">chatRequestModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">conversationModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">guideModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">incidentModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">messageModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">otpModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">paymentModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">reviewModel.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">tourModel.js</span></div>
+      <div class="tr"><span class="tc">└── </span><span class="td">userModel.js</span></div>
+    </div>
+
+    <!-- routes/ -->
+    <div class="tr"><span class="tc">├── </span><span class="td dir">routes/</span><span class="tco">thin — import controller, define method + path</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">├── </span><span class="td">alertRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">bookingRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">chatRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">geocodeRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">guideRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">incidentRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">paymentRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">placesRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">reviewRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">safetyReportRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">searchRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">tourRoutes.js</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">uploadRoutes.js</span><span class="tco">POST /api/upload/avatar</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">userRoutes.js</span></div>
+      <div class="tr"><span class="tc">└── </span><span class="td">weatherRoutes.js</span></div>
+    </div>
+
+    <!-- socket/ -->
+    <div class="tr"><span class="tc">└── </span><span class="td dir">socket/</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">└── </span><span class="td">socketHandlers.js</span><span class="tco">all Socket.IO event registration</span></div>
+    </div>
+  </div>
+
+  <!-- Frontend -->
+  <div class="tr" style="margin-top:6px"><span class="tc">└── </span><span class="td dir">journeyshield-frontend/</span></div>
+  <div class="tg">
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">.env</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">.gitignore</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">index.html</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">package.json</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">tailwind.config.js</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">vercel.json</span><span class="tco">SPA rewrite — all routes → index.html</span></div>
+    <div class="tr"><span class="tc">├── </span><span class="td root-file">vite.config.js</span></div>
+
+    <!-- src/ -->
+    <div class="tr"><span class="tc">└── </span><span class="td dir">src/</span></div>
+    <div class="tg">
+      <div class="tr"><span class="tc">├── </span><span class="td">App.jsx</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">index.css</span></div>
+      <div class="tr"><span class="tc">├── </span><span class="td">main.jsx</span></div>
+
+      <!-- components/ -->
+      <div class="tr"><span class="tc">├── </span><span class="td dir">components/</span></div>
+      <div class="tg">
+        <div class="tr"><span class="tc">├── </span><span class="td dir">common/</span></div>
+        <div class="tg">
+          <div class="tr"><span class="tc">├── </span><span class="td">ProtectedRoute.jsx</span></div>
+          <div class="tr"><span class="tc">├── </span><span class="td">SafetyModal.jsx</span></div>
+          <div class="tr"><span class="tc">├── </span><span class="td">SimpleMap.jsx</span></div>
+          <div class="tr"><span class="tc">└── </span><span class="td">Toast.jsx</span></div>
+        </div>
+        <div class="tr"><span class="tc">└── </span><span class="td dir">layout/</span></div>
+        <div class="tg">
+          <div class="tr"><span class="tc">└── </span><span class="td">Navbar.jsx</span></div>
+        </div>
+      </div>
+
+      <!-- pages/ -->
+      <div class="tr"><span class="tc">├── </span><span class="td dir">pages/</span><span class="tco">15 pages, role-protected where needed</span></div>
+      <div class="tg">
+        <div class="tr"><span class="tc">├── </span><span class="td">Alerts.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Chat.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Dashboard.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Discover.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">EditProfile.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">GroupTours.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">GuideDashboard.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">GuideReviews.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Guides.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Guideviewtravelerprofile.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">HomePage.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Login.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">MyBookings.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Myprofile.jsx</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">Registration.jsx</span></div>
+        <div class="tr"><span class="tc">└── </span><span class="td">TravelerEditProfile.jsx</span></div>
+      </div>
+
+      <!-- services/ -->
+      <div class="tr"><span class="tc">└── </span><span class="td dir">services/</span><span class="tco">one file per backend API section</span></div>
+      <div class="tg">
+        <div class="tr"><span class="tc">├── </span><span class="td">alertService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">authService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">bookingService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">chatService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">geocodeService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">guidesService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">incidentService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">keepAlive.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">placesService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">reviewService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">routeService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">safetyReportService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">searchService.js</span></div>
+        <div class="tr"><span class="tc">├── </span><span class="td">tourService.js</span></div>
+        <div class="tr"><span class="tc">└── </span><span class="td">travelerService.js</span></div>
+      </div>
+    </div>
+  </div>
 </div>
+
+</div><!-- .tree-root -->
+</div><!-- .tree-wrap -->
 
 <!-- DATABASE MODELS -->
 <h2 id="models"><span class="ico">🗄️</span>Database Models (MongoDB)</h2>
@@ -523,7 +685,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">emergencyContact</span><span class="ft">{ name, phone, relation }</span></div>
     <div class="fr"><span class="fn">socialLinks</span><span class="ft">{ instagram, website }</span></div>
   </div>
-
   <div class="sc">
     <h5>Guide</h5>
     <div class="fr"><span class="fn">user</span><span class="ft ref">→ User (1:1)</span></div>
@@ -537,7 +698,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">socialLinks</span><span class="ft">{ instagram, facebook, website }</span></div>
     <div class="fr"><span class="fn">rating, reviews</span><span class="ft">Number (recomputed)</span></div>
   </div>
-
   <div class="sc">
     <h5>Booking</h5>
     <div class="fr"><span class="fn">traveler</span><span class="ft ref">→ User</span></div>
@@ -548,7 +708,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">groupMembers</span><span class="ft">[{ name, age, notes }]</span></div>
     <div class="fr"><span class="fn">isReviewed</span><span class="ft">Boolean — prevents double review</span></div>
   </div>
-
   <div class="sc">
     <h5>Message</h5>
     <div class="fr"><span class="fn">conversation</span><span class="ft ref">→ Conversation</span></div>
@@ -562,14 +721,12 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">readBy</span><span class="ft ref">[→ User]</span></div>
     <div class="fr"><span class="fn">expiresAt</span><span class="ft ttl">TTL — auto-delete 60 days</span></div>
   </div>
-
   <div class="sc">
     <h5>Conversation</h5>
     <div class="fr"><span class="fn">participants</span><span class="ft ref">[→ User] always 2</span></div>
     <div class="fr"><span class="fn">lastMessage</span><span class="ft">{ text, sender, createdAt }</span></div>
     <div class="fr"><span class="fn">unreadCount</span><span class="ft ttl">Map&lt;userId → count&gt;</span></div>
   </div>
-
   <div class="sc">
     <h5>ChatRequest</h5>
     <div class="fr"><span class="fn">from, to</span><span class="ft ref">→ User</span></div>
@@ -577,7 +734,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">message</span><span class="ft">String (max 300)</span></div>
     <div class="fr"><span class="fn">index { from, to }</span><span class="ft ttl">unique — no duplicate requests</span></div>
   </div>
-
   <div class="sc">
     <h5>ChatLog</h5>
     <div class="fr"><span class="fn">conversationId</span><span class="ft ref">→ Conversation (unique)</span></div>
@@ -585,7 +741,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">requestApprovedAt</span><span class="ft">Date</span></div>
     <div class="fr"><span class="fn">lastActivityAt</span><span class="ft">Date (no content stored)</span></div>
   </div>
-
   <div class="sc">
     <h5>Payment</h5>
     <div class="fr"><span class="fn">booking</span><span class="ft ref">→ Booking (unique)</span></div>
@@ -596,7 +751,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">timeline</span><span class="ft">[{ step, completedBy, note }]</span></div>
     <div class="fr"><span class="fn">expiresAt</span><span class="ft ttl">TTL — auto-delete 6 months</span></div>
   </div>
-
   <div class="sc">
     <h5>Review</h5>
     <div class="fr"><span class="fn">user</span><span class="ft ref">→ User (traveler)</span></div>
@@ -605,7 +759,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">comment</span><span class="ft">String</span></div>
     <div class="fr"><span class="fn">editCount</span><span class="ft">Number</span></div>
   </div>
-
   <div class="sc">
     <h5>Tour</h5>
     <div class="fr"><span class="fn">guide</span><span class="ft ref">→ User</span></div>
@@ -616,7 +769,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">kickedTravelers</span><span class="ft">[{ user, reason }]</span></div>
     <div class="fr"><span class="fn">status</span><span class="ft">Open|Full|Completed|Cancelled</span></div>
   </div>
-
   <div class="sc">
     <h5>Incident</h5>
     <div class="fr"><span class="fn">type</span><span class="ft">Theft|Harassment|Assault…</span></div>
@@ -625,14 +777,12 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fr"><span class="fn">severity</span><span class="ft">Low|Medium|High|Critical</span></div>
     <div class="fr"><span class="fn">reportedBy</span><span class="ft ref">→ User</span></div>
   </div>
-
   <div class="sc">
     <h5>OTP</h5>
     <div class="fr"><span class="fn">email</span><span class="ft">String</span></div>
     <div class="fr"><span class="fn">otp</span><span class="ft">String (6-digit)</span></div>
     <div class="fr"><span class="fn">createdAt</span><span class="ft ttl">TTL — auto-deleted after 5 min</span></div>
   </div>
-
   <div class="sc">
     <h5>Alert</h5>
     <div class="fr"><span class="fn">location, description</span><span class="ft">String</span></div>
@@ -645,10 +795,10 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <h2 id="routes"><span class="ico">🛣️</span>API Endpoints</h2>
 <p>All routes mounted in <code>server.js</code>. 🔒 means a valid JWT token is required in the <code>Authorization: Bearer &lt;token&gt;</code> header.</p>
 
-<h3>Users & Auth</h3>
+<h3>Users &amp; Auth</h3>
 <table>
   <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
-  <tr><td><span class="rt POST">POST</span></td><td><code>/api/users/send-otp</code></td><td>—</td><td>Generate & email a 6-digit OTP via Brevo</td></tr>
+  <tr><td><span class="rt POST">POST</span></td><td><code>/api/users/send-otp</code></td><td>—</td><td>Generate &amp; email a 6-digit OTP via Brevo</td></tr>
   <tr><td><span class="rt POST">POST</span></td><td><code>/api/users/verify-register</code></td><td>—</td><td>Verify OTP → create account → return JWT</td></tr>
   <tr><td><span class="rt POST">POST</span></td><td><code>/api/users/login</code></td><td>—</td><td>Login with email/username + password → return JWT</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/users/me</code></td><td>🔒</td><td>Get own traveler profile</td></tr>
@@ -679,7 +829,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <table>
   <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
   <tr><td><span class="rt POST">POST</span></td><td><code>/api/chat/request</code></td><td>🔒</td><td>Send a chat request to another user</td></tr>
-  <tr><td><span class="rt GET">GET</span></td><td><code>/api/chat/request/status/:userId</code></td><td>🔒</td><td>Check connection status (connected/pending/none)</td></tr>
+  <tr><td><span class="rt GET">GET</span></td><td><code>/api/chat/request/status/:userId</code></td><td>🔒</td><td>Check connection status</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/chat/requests/pending</code></td><td>🔒</td><td>All pending requests received by me</td></tr>
   <tr><td><span class="rt PUT">PUT</span></td><td><code>/api/chat/request/:requestId</code></td><td>🔒</td><td>Approve or reject → creates Conversation on approve</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/chat/conversations</code></td><td>🔒</td><td>My conversations list with unread counts</td></tr>
@@ -689,23 +839,22 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/chat/unread-count</code></td><td>🔒</td><td>Total unread count across all conversations</td></tr>
 </table>
 
-<h3>Safety, Maps & Places</h3>
+<h3>Safety, Maps &amp; Places</h3>
 <table>
   <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/safety?city=</code></td><td>—</td><td>Safety report by city name</td></tr>
-  <tr><td><span class="rt GET">GET</span></td><td><code>/api/safety/current?lat=&lon=</code></td><td>—</td><td>Safety report by coordinates</td></tr>
+  <tr><td><span class="rt GET">GET</span></td><td><code>/api/safety/current?lat=&amp;lon=</code></td><td>—</td><td>Safety report by coordinates</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/safety/incidents</code></td><td>—</td><td>Nearby incidents (geospatial query)</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/search/geocode?q=</code></td><td>—</td><td>City name → lat/lon (TomTom)</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/search/places</code></td><td>—</td><td>Nearby POIs (Foursquare)</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/search/route</code></td><td>—</td><td>Route polyline between two points (TomTom)</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/alerts?city=</code></td><td>🔒</td><td>Weather alert for a city (OpenWeatherMap)</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/incidents</code></td><td>—</td><td>All seeded incidents</td></tr>
-  <tr><td><span class="rt GET">GET</span></td><td><code>/api/places</code></td><td>🔒</td><td>Foursquare nearby places (auth-protected)</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/weather/local</code></td><td>—</td><td>Weather-based safety report by coords</td></tr>
   <tr><td><span class="rt GET">GET</span></td><td><code>/api/weather/:city</code></td><td>—</td><td>Weather-based safety report by city</td></tr>
 </table>
 
-<h3>Reviews, Tours & Payments</h3>
+<h3>Reviews, Tours &amp; Payments</h3>
 <table>
   <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
   <tr><td><span class="rt POST">POST</span></td><td><code>/api/reviews</code></td><td>🔒</td><td>Submit or update review (requires completed booking)</td></tr>
@@ -731,7 +880,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
   <div class="fl">
     <div class="fl-num">2</div>
     <div class="fl-body">
-      <h5>Verify & Create Account</h5>
+      <h5>Verify &amp; Create Account</h5>
       <p>User submits the OTP along with their full details. Backend looks up the OTP document — if it expired MongoDB already deleted it. On success: password is hashed with bcrypt (10 salt rounds), a User document is created, and if role is Guide or Both, an empty Guide document is auto-created. A JWT token is returned and stored in sessionStorage.</p>
     </div>
   </div>
@@ -751,16 +900,15 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
   </div>
 </div>
 
-<!-- CHAT FLOW -->
+<!-- REAL-TIME CHAT -->
 <h2 id="chat"><span class="ico">💬</span>Real-time Chat</h2>
 <p>Chat uses a dual-channel approach — REST API for loading history and sending media, Socket.IO for real-time delivery.</p>
-
 <div class="flow">
   <div class="fl">
     <div class="fl-num">1</div>
     <div class="fl-body">
       <h5>Chat Request System</h5>
-      <p>Either user can initiate. A ChatRequest is created with status <em>pending</em>. The recipient sees it in their Chat sidebar. On approval, a Conversation document is created linking both user IDs. A ChatLog entry is also created as a permanent audit record — it stores only who connected and when, never message content.</p>
+      <p>Either user can initiate. A ChatRequest is created with status <em>pending</em>. The recipient sees it in their Chat sidebar. On approval, a Conversation document is created linking both user IDs. A ChatLog entry is also created as a permanent audit record.</p>
     </div>
   </div>
   <div class="fl">
@@ -774,21 +922,21 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fl-num">3</div>
     <div class="fl-body">
       <h5>Rich Media Messages</h5>
-      <p>Images, audio recordings, and files are uploaded directly from the browser to Cloudinary using an unsigned upload preset. The Cloudinary URL is then sent to the backend via REST (<code>POST /api/chat/messages</code>) with the message type, so it gets stored and emitted to the other user via Socket.IO.</p>
+      <p>Images, audio recordings, and files are uploaded directly from the browser to Cloudinary using an unsigned upload preset. The Cloudinary URL is then sent to the backend via REST (<code>POST /api/chat/messages</code>) and emitted to the other user via Socket.IO.</p>
     </div>
   </div>
   <div class="fl">
     <div class="fl-num">4</div>
     <div class="fl-body">
       <h5>Typing Indicators &amp; Read Receipts</h5>
-      <p>While typing, the client emits a <code>typing</code> socket event (debounced — auto-cancels after 1.5s). The other user sees "Typing…". When a user opens a conversation, a <code>markRead</code> event fires — all unread messages get their <code>readBy</code> array updated, and the sender receives a <code>messagesRead</code> event showing ✓✓.</p>
+      <p>While typing, the client emits a <code>typing</code> socket event (debounced — auto-cancels after 1.5s). When a user opens a conversation, a <code>markRead</code> event fires — all unread messages get their <code>readBy</code> array updated, and the sender receives a <code>messagesRead</code> event showing ✓✓.</p>
     </div>
   </div>
   <div class="fl">
     <div class="fl-num">5</div>
     <div class="fl-body">
       <h5>Emoji Reactions</h5>
-      <p>Any message can be reacted to with one emoji per user. The server toggles the reaction (adds if not present, removes if same emoji is tapped again), broadcasts the updated reactions array to the whole conversation room so all participants see it live.</p>
+      <p>Any message can be reacted to with one emoji per user. The server toggles the reaction, broadcasts the updated reactions array to the whole conversation room so all participants see it live.</p>
     </div>
   </div>
 </div>
@@ -800,7 +948,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fl-num">1</div>
     <div class="fl-body">
       <h5>Discover Page (Leaflet Map)</h5>
-      <p>User types a city name — the backend geocodes it via TomTom API to get coordinates, then queries Foursquare for nearby places of interest (restaurants, museums, parks, attractions). Results appear as category-colored markers. Clicking a marker shows its name and a "Get Directions" button that calls the TomTom route API and draws a polyline on the map.</p>
+      <p>User types a city name — the backend geocodes it via TomTom API to get coordinates, then queries Foursquare for nearby places of interest. Results appear as category-colored markers. Clicking a marker shows its name and a "Get Directions" button that calls the TomTom route API and draws a polyline on the map.</p>
     </div>
   </div>
   <div class="fl">
@@ -814,7 +962,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fl-num">3</div>
     <div class="fl-body">
       <h5>Incident Markers</h5>
-      <p>Incidents are seeded with GeoJSON Point coordinates and a 2dsphere index in MongoDB. The safety API queries them using <code>$nearSphere</code> to find incidents within a given radius. They appear as red CircleMarkers on the Leaflet map with severity-based colour coding and a popup with description.</p>
+      <p>Incidents are seeded with GeoJSON Point coordinates and a 2dsphere index in MongoDB. The safety API queries them using <code>$nearSphere</code> to find incidents within a given radius. They appear as red CircleMarkers on the Leaflet map with severity-based colour coding.</p>
     </div>
   </div>
 </div>
@@ -840,7 +988,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
     <div class="fl-num">3</div>
     <div class="fl-body">
       <h5>Payment (Cash Mode)</h5>
-      <p>Currently only Cash payment is implemented. Traveler initiates → a Payment document is created with a timeline. Traveler confirms they paid in-person → guide confirms they received it → status reaches <em>completed</em>. The payment record auto-deletes after 6 months via MongoDB TTL. Online payment (Razorpay/UPI) is planned for a future version.</p>
+      <p>Currently only Cash payment is implemented. Traveler initiates → a Payment document is created with a timeline. Traveler confirms they paid in-person → guide confirms they received it → status reaches <em>completed</em>. The payment record auto-deletes after 6 months via MongoDB TTL.</p>
     </div>
   </div>
   <div class="fl">
@@ -893,7 +1041,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <span class="hl-cmt"># create .env with VITE_API_URL=http://localhost:5000 + Cloudinary keys</span>
 <span class="hl-cmd">npm run dev</span>       <span class="hl-cmt"># starts on http://localhost:5173</span>
 
-<span class="hl-cmt"># Optional: seed the database with test users and incidents</span>
+<span class="hl-cmt"># Optional: seed the database</span>
 <span class="hl-cmd">cd</span> journeyshield-backend
 <span class="hl-cmd">npm run data:import</span>   <span class="hl-cmt"># creates test Traveler + 2 Guides + sample bookings</span>
 <span class="hl-cmd">node data/incidentSeeder.js</span>  <span class="hl-cmt"># seeds safety incidents on the map</span></code></pre>
@@ -909,7 +1057,7 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
       <li>Build Command: <code>npm install</code></li>
       <li>Start Command: <code>node server.js</code></li>
       <li>Add all <code>.env</code> keys in the Environment tab</li>
-      <li>Free tier spins down after 15 min of inactivity — the frontend pings <code>/ping</code> every 10 min during active sessions to prevent this</li>
+      <li>Free tier spins down after 15 min — frontend pings <code>/ping</code> every 10 min to prevent this</li>
     </ul>
   </div>
   <div class="card glow-y">
@@ -919,19 +1067,18 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
       <li>Root Directory: <code>journeyshield-frontend</code></li>
       <li>Build Command: <code>npm run build</code> (auto-detected)</li>
       <li>Add <code>VITE_API_URL</code> pointing to your Render URL</li>
-      <li><code>vercel.json</code> already present — it rewrites all routes to <code>index.html</code> so React Router works on direct URL access</li>
+      <li><code>vercel.json</code> already present — rewrites all routes to <code>index.html</code> so React Router works on direct URL access</li>
     </ul>
   </div>
 </div>
 
 <!-- CHECKLIST -->
 <h2 id="checklist"><span class="ico">✅</span>Setup Checklist</h2>
-<h3>Services & Accounts</h3>
+<h3>Services &amp; Accounts</h3>
 <div class="ck"><div class="ckbox"></div><p>MongoDB Atlas — cluster created, database user added, Network Access allows <code>0.0.0.0/0</code>, connection string obtained</p></div>
 <div class="ck"><div class="ckbox"></div><p>Cloudinary — account created, unsigned upload preset named <strong>journeyShield</strong> created, cloud name + API key + secret obtained</p></div>
 <div class="ck"><div class="ckbox"></div><p>Brevo — account created, sender email domain verified, API key obtained</p></div>
 <div class="ck"><div class="ckbox"></div><p>Foursquare, OpenWeatherMap, TomTom — API keys obtained and added to backend <code>.env</code></p></div>
-
 <h3>Local Development</h3>
 <div class="ck"><div class="ckbox"></div><p>Both <code>.env</code> files created with all required keys filled in</p></div>
 <div class="ck"><div class="ckbox"></div><p><code>npm install</code> run in both backend and frontend folders</p></div>
@@ -941,7 +1088,6 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <div class="ck"><div class="ckbox"></div><p>Chat works: messages send and receive in real time, typing indicator visible</p></div>
 <div class="ck"><div class="ckbox"></div><p>Map loads on Discover page: search finds places, incidents appear as markers</p></div>
 <div class="ck"><div class="ckbox"></div><p>Safety score loads on Alerts page for both current location and searched city</p></div>
-
 <h3>Deployment</h3>
 <div class="ck"><div class="ckbox"></div><p>Backend deployed on Render with all env vars set — <code>/ping</code> endpoint responds</p></div>
 <div class="ck"><div class="ckbox"></div><p>Frontend deployed on Vercel with <code>VITE_API_URL</code> pointing to the Render URL</p></div>
@@ -950,12 +1096,65 @@ footer a:hover{text-shadow:0 0 8px var(--cyan)}
 <footer>
   Made by <strong>Suyash Dubey</strong> &nbsp;·&nbsp;
   <a href="https://github.com/suyashdubey31engiaz-prog" target="_blank">GitHub</a> &nbsp;·&nbsp;
-  <a href="https://www.linkedin.com/in/vicck" target="_blank">LinkedIn</a>
+  <a href="https://www.linkedin.com/in/vicck" target="_blank">LinkedIn</a> &nbsp;·&nbsp;
+  <a href="https://journey-shield.vercel.app/" target="_blank">Live Demo ↗</a>
   <br/><br/>
   <span style="color:#1e2d47;font-size:11px">Built with Node.js · Express · MongoDB · React · Socket.IO · Tailwind · Leaflet</span>
 </footer>
 
 </main>
-</div>
+</div><!-- .shell -->
+
+<script>
+/* ── Sidebar active-link highlighting ── */
+const allLinks = document.querySelectorAll('.nav-link');
+
+function setActive(href) {
+  allLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === href);
+  });
+}
+
+// Click handler
+allLinks.forEach(link => {
+  link.addEventListener('click', function() {
+    setActive(this.getAttribute('href'));
+    // close mobile drawer if open
+    document.getElementById('drawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+  });
+});
+
+// Scroll-spy — highlight the section currently in view
+const sections = document.querySelectorAll('main section, main h2[id]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      setActive('#' + entry.target.id);
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+document.querySelectorAll('main [id]').forEach(el => observer.observe(el));
+
+/* ── Mobile hamburger ── */
+const menuBtn  = document.getElementById('menuBtn');
+const closeBtn = document.getElementById('closeBtn');
+const drawer   = document.getElementById('drawer');
+const overlay  = document.getElementById('overlay');
+
+menuBtn.addEventListener('click', () => {
+  drawer.classList.add('open');
+  overlay.classList.add('open');
+});
+closeBtn.addEventListener('click', () => {
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+});
+overlay.addEventListener('click', () => {
+  drawer.classList.remove('open');
+  overlay.classList.remove('open');
+});
+</script>
 </body>
 </html>
