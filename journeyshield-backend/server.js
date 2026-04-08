@@ -87,6 +87,15 @@ io.on('connection', (socket) => {
 // Make io accessible in controllers via req.app.get('io')
 app.set('io', io);
 
+// ── Self-ping to prevent Render free tier sleep ──────────────────────────────
+// Pings itself every 4 minutes so Render never goes to sleep
+// Works independently of UptimeRobot as a backup keep-alive
+const SELF_URL = process.env.RENDER_EXTERNAL_URL || 'https://journeyshield-api.onrender.com';
+setInterval(() => {
+  fetch(`${SELF_URL}/`)
+    .then(() => console.log('[Keep-alive] Self-ping successful'))
+    .catch((err) => console.log('[Keep-alive] Self-ping failed:', err.message));
+}, 4 * 60 * 1000); // every 4 minutes
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-//--- File: C:\Users\Suyash Dubey\OneDrive\Desktop\SafeJourney\journeyshield-backend\test-api.js ---
